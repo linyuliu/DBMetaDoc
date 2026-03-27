@@ -1,8 +1,0 @@
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/MetadataExtractorFactory.java
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/PostgresqlMetadataExtractor.java
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/DbType.java
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/MetadataExtractor.java
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/ConnectionFactory.java
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/MysqlMetadataExtractor.java
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/AbstractMetadataExtractor.java
-/home/runner/work/DBMetaDoc/DBMetaDoc/dbmetadoc-db/src/main/java/com/dbmetadoc/db/KingbaseMetadataExtractor.java

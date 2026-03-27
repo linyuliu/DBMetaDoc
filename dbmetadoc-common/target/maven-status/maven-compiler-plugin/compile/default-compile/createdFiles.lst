@@ -1,6 +1,0 @@
-com/dbmetadoc/common/model/ColumnInfo.class
-com/dbmetadoc/common/model/DatabaseInfo.class
-com/dbmetadoc/common/dto/DocumentRequest.class
-com/dbmetadoc/common/model/IndexInfo.class
-com/dbmetadoc/common/model/TableInfo.class
-com/dbmetadoc/common/model/ForeignKeyInfo.class
