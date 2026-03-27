@@ -31,6 +31,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <mysql.version>8.4.0</mysql.version>
         <postgresql.version>42.7.4</postgresql.version>
         <oracle.version>23.9.0.25.07</oracle.version>
@@ -43,6 +44,7 @@
         <hutool.version>5.8.43</hutool.version>
         <lombok.version>1.18.42</lombok.version>
         <fastjson2.version>2.0.59</fastjson2.version>
+        <slf4j.version>2.0.12</slf4j.version>
     </properties>
 
     <dependencyManagement>
@@ -171,6 +173,11 @@
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -183,6 +190,7 @@
                     <configuration>
                         <source>${maven.compiler.source}</source>
                         <target>${maven.compiler.target}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
                         <parameters>true</parameters>
                         <annotationProcessorPaths>
                             <path>
@@ -203,6 +211,27 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <configuration>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <configuration>
+                        <argLine>-Dfile.encoding=${project.build.sourceEncoding}</argLine>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

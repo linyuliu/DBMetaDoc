@@ -6,6 +6,7 @@ import com.dbmetadoc.common.model.DatabaseInfo;
 import com.dbmetadoc.db.core.DatabaseConnectionInfo;
 import com.dbmetadoc.app.properties.MetadataCacheProperties;
 import com.dbmetadoc.app.repository.MetadataCacheRepository;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.HexFormat;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class MetadataCacheService {
 
@@ -24,9 +26,13 @@ public class MetadataCacheService {
     private final MetadataCacheProperties metadataCacheProperties;
 
     public Optional<DatabaseInfo> find(DatabaseConnectionInfo connectionInfo) {
-        return metadataCacheRepository.findValidByCacheKey(buildCacheKey(connectionInfo), LocalDateTime.now())
+        String cacheKey = buildCacheKey(connectionInfo);
+        Optional<DatabaseInfo> result = metadataCacheRepository.findValidByCacheKey(cacheKey, LocalDateTime.now())
                 .map(MetadataCacheRecord::getMetadataJson)
                 .map(json -> JSON.parseObject(json, DatabaseInfo.class));
+        log.debug("查询元数据缓存，数据库类型：{}，数据库：{}，Schema：{}，命中：{}",
+                connectionInfo.getType().name(), connectionInfo.getDatabase(), connectionInfo.getSchema(), result.isPresent());
+        return result;
     }
 
     public void save(DatabaseConnectionInfo connectionInfo, DatabaseInfo databaseInfo) {
@@ -42,6 +48,9 @@ public class MetadataCacheService {
                 .syncedAt(syncedAt)
                 .expiresAt(syncedAt.plusHours(metadataCacheProperties.getTtlHours()))
                 .build());
+        log.info("写入元数据缓存，数据库类型：{}，数据库：{}，Schema：{}，过期时间：{}",
+                connectionInfo.getType().name(), connectionInfo.getDatabase(), connectionInfo.getSchema(),
+                syncedAt.plusHours(metadataCacheProperties.getTtlHours()));
     }
 
     private String buildCacheKey(DatabaseConnectionInfo connectionInfo) {

@@ -6,6 +6,7 @@ import com.dbmetadoc.common.model.DatabaseInfo;
 import com.dbmetadoc.common.model.ForeignKeyInfo;
 import com.dbmetadoc.common.model.IndexInfo;
 import com.dbmetadoc.common.model.TableInfo;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -23,10 +24,12 @@ import java.util.Set;
 /**
  * 基于 JDBC Metadata 的通用提取器基类。
  */
+@Slf4j
 public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor {
 
     @Override
     public DatabaseInfo extract(Connection connection, DatabaseConnectionInfo connectionInfo) throws SQLException {
+        long startTime = System.currentTimeMillis();
         DatabaseMetaData metaData = connection.getMetaData();
         String catalog = resolveCatalog(connectionInfo);
         String schemaPattern = resolveSchemaPattern(connection, connectionInfo);
@@ -40,9 +43,15 @@ public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor
                 .type(getDatabaseType().name())
                 .version(metaData.getDatabaseProductVersion())
                 .driverName(metaData.getDriverName())
+                .databaseName(connectionInfo.getDatabase())
+                .schemaName(connectionInfo.getSchemaName())
+                .catalogName(StrUtil.blankToDefault(connectionInfo.getCatalogName(), catalog))
                 .tables(tables)
                 .build();
         enrichDatabaseInfo(connection, connectionInfo, databaseInfo);
+        log.info("使用 JDBC Metadata 完成元数据提取，数据库类型：{}，数据库：{}，Schema：{}，表数量：{}，耗时：{} ms",
+                getDatabaseType().name(), connectionInfo.getDatabase(), connectionInfo.getSchema(),
+                tables.size(), System.currentTimeMillis() - startTime);
         return databaseInfo;
     }
 
@@ -107,10 +116,12 @@ public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor
             while (rs.next()) {
                 String tableName = rs.getString("TABLE_NAME");
                 Set<String> primaryKeyColumns = getPrimaryKeyColumns(metaData, catalog, schemaPattern, tableName);
+                String tableSchema = StrUtil.blankToDefault(getString(rs, "TABLE_SCHEM"),
+                        resolveTableSchema(connectionInfo, catalog, schemaPattern));
                 tables.add(TableInfo.builder()
                         .name(tableName)
                         .comment(rs.getString("REMARKS"))
-                        .schema(resolveTableSchema(connectionInfo, catalog, schemaPattern))
+                        .schema(tableSchema)
                         .tableType(rs.getString("TABLE_TYPE"))
                         .primaryKey(String.join(",", primaryKeyColumns))
                         .columns(extractColumns(metaData, catalog, schemaPattern, tableName, primaryKeyColumns))
@@ -136,10 +147,12 @@ public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor
                         .scale(getInteger(rs, "DECIMAL_DIGITS"))
                         .nullable("YES".equalsIgnoreCase(getString(rs, "IS_NULLABLE")))
                         .autoIncrement("YES".equalsIgnoreCase(getString(rs, "IS_AUTOINCREMENT")))
+                        .generated("YES".equalsIgnoreCase(getString(rs, "IS_GENERATEDCOLUMN")))
                         .primaryKey(primaryKeyColumns.contains(normalizeIdentifier(columnName)))
                         .defaultValue(rs.getString("COLUMN_DEF"))
                         .comment(rs.getString("REMARKS"))
                         .ordinalPosition(getInteger(rs, "ORDINAL_POSITION"))
+                        .rawType(rs.getString("TYPE_NAME"))
                         .build());
             }
         }
@@ -201,6 +214,29 @@ public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor
         TableInfo tableInfo = tableMap.get(normalizeIdentifier(tableName));
         if (tableInfo != null && StrUtil.isNotBlank(comment)) {
             tableInfo.setComment(comment);
+        }
+    }
+
+    protected void applyTableAttributes(Map<String, TableInfo> tableMap, String tableName, String engine, String charset,
+                                        String collation, String rowFormat, String createOptions) {
+        TableInfo tableInfo = tableMap.get(normalizeIdentifier(tableName));
+        if (tableInfo == null) {
+            return;
+        }
+        if (StrUtil.isNotBlank(engine)) {
+            tableInfo.setEngine(engine);
+        }
+        if (StrUtil.isNotBlank(charset)) {
+            tableInfo.setCharset(charset);
+        }
+        if (StrUtil.isNotBlank(collation)) {
+            tableInfo.setCollation(collation);
+        }
+        if (StrUtil.isNotBlank(rowFormat)) {
+            tableInfo.setRowFormat(rowFormat);
+        }
+        if (StrUtil.isNotBlank(createOptions)) {
+            tableInfo.setCreateOptions(createOptions);
         }
     }
 

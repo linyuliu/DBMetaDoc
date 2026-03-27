@@ -23,6 +23,11 @@ public class TableInfo implements Serializable {
     private String schema;
     private String primaryKey;
     private String tableType;
+    private String engine;
+    private String charset;
+    private String collation;
+    private String rowFormat;
+    private String createOptions;
     private List<ColumnInfo> columns;
     private List<IndexInfo> indexes;
     private List<ForeignKeyInfo> foreignKeys;

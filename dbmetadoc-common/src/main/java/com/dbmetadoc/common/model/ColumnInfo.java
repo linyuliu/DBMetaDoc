@@ -25,8 +25,10 @@ public class ColumnInfo implements Serializable {
     private Boolean nullable;
     private Boolean primaryKey;
     private Boolean autoIncrement;
+    private Boolean generated;
     private String javaType;
     private String defaultValue;
     private String comment;
     private Integer ordinalPosition;
+    private String rawType;
 }

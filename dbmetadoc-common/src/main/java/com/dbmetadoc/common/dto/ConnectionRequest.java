@@ -5,6 +5,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+/**
+ * 通用连接请求参数。
+ * <p>
+ * 结构化字段优先于 jdbcUrl；当结构化字段缺失时，服务层会尝试从 jdbcUrl 中解析并补齐。
+ * </p>
+ */
 @Data
 public class ConnectionRequest {
 
@@ -13,15 +19,19 @@ public class ConnectionRequest {
     @NotBlank(message = "数据库类型不能为空")
     private String dbType;
 
-    @NotBlank(message = "主机地址不能为空")
+    /**
+     * 可选的 JDBC URL 辅助输入。
+     */
+    private String jdbcUrl;
+
     private String host;
 
     @Min(value = 1, message = "端口号必须大于0")
     @Max(value = 65535, message = "端口号不能超过65535")
     private Integer port;
 
-    @NotBlank(message = "数据库名不能为空")
     private String database;
+
     private String schema;
 
     @NotBlank(message = "用户名不能为空")
@@ -29,6 +39,8 @@ public class ConnectionRequest {
 
     @NotBlank(message = "密码不能为空")
     private String password;
+
     private Boolean useCache;
+
     private Boolean forceRefresh;
 }

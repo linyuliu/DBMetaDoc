@@ -20,4 +20,8 @@ public class DriverInfoResponse {
     private Boolean mysqlLike;
     private Boolean pgLike;
     private Boolean oracleLike;
+    private Boolean supportsDatabase;
+    private Boolean supportsSchema;
+    private Boolean supportsJdbcUrl;
+    private String metadataStrategy;
 }

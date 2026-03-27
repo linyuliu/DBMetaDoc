@@ -13,49 +13,62 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum DatabaseType {
 
-    MYSQL("MySQL", 3306, "com.mysql.cj.jdbc.Driver", "SELECT 1", false, true, false, false) {
+    MYSQL("MySQL", 3306, "com.mysql.cj.jdbc.Driver", "SELECT 1", false, true, false, false,
+            true, false, true, "SHOW -> information_schema -> JDBC Metadata") {
         @Override
-        public String buildJdbcUrl(String host, int port, String database, String schema) {
+        protected String doBuildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
             return String.format(
                     "jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true",
-                    host, port, database);
+                    connectionInfo.getHost(), connectionInfo.getEffectivePort(), connectionInfo.getDatabase());
         }
     },
-    POSTGRESQL("PostgreSQL", 5432, "org.postgresql.Driver", "SELECT 1", false, false, true, false) {
+    POSTGRESQL("PostgreSQL", 5432, "org.postgresql.Driver", "SELECT 1", false, false, true, false,
+            true, true, true, "pg_catalog -> information_schema -> JDBC Metadata") {
         @Override
-        public String buildJdbcUrl(String host, int port, String database, String schema) {
-            StringBuilder builder = new StringBuilder(String.format("jdbc:postgresql://%s:%d/%s", host, port, database));
-            if (StrUtil.isNotBlank(schema)) {
-                builder.append("?currentSchema=").append(schema);
+        protected String doBuildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
+            StringBuilder builder = new StringBuilder(String.format("jdbc:postgresql://%s:%d/%s",
+                    connectionInfo.getHost(), connectionInfo.getEffectivePort(), connectionInfo.getDatabase()));
+            if (StrUtil.isNotBlank(connectionInfo.getSchema())) {
+                builder.append("?currentSchema=").append(connectionInfo.getSchema());
             }
             return builder.toString();
         }
     },
-    ORACLE("Oracle", 1521, "oracle.jdbc.OracleDriver", "SELECT 1 FROM DUAL", false, false, false, true) {
+    ORACLE("Oracle", 1521, "oracle.jdbc.OracleDriver", "SELECT 1 FROM DUAL", false, false, false, true,
+            true, true, true, "ALL_* -> USER_* -> JDBC Metadata") {
         @Override
-        public String buildJdbcUrl(String host, int port, String database, String schema) {
-            return String.format("jdbc:oracle:thin:@//%s:%d/%s", host, port, database);
+        protected String doBuildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
+            if (connectionInfo.isSidMode()) {
+                return String.format("jdbc:oracle:thin:@%s:%d:%s",
+                        connectionInfo.getHost(), connectionInfo.getEffectivePort(), connectionInfo.getDatabase());
+            }
+            return String.format("jdbc:oracle:thin:@//%s:%d/%s",
+                    connectionInfo.getHost(), connectionInfo.getEffectivePort(), connectionInfo.getDatabase());
         }
     },
-    KINGBASE("KingbaseES", 54321, "com.kingbase8.Driver", "SELECT 1", true, true, true, true) {
+    KINGBASE("KingbaseES", 54321, "com.kingbase8.Driver", "SELECT 1", true, true, true, true,
+            true, true, true, "模式识别 -> PG/Oracle/MySQL 兼容分支") {
         @Override
-        public String buildJdbcUrl(String host, int port, String database, String schema) {
-            StringBuilder builder = new StringBuilder(String.format("jdbc:kingbase8://%s:%d/%s", host, port, database));
-            if (StrUtil.isNotBlank(schema)) {
-                builder.append("?currentSchema=").append(schema);
+        protected String doBuildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
+            StringBuilder builder = new StringBuilder(String.format("jdbc:kingbase8://%s:%d/%s",
+                    connectionInfo.getHost(), connectionInfo.getEffectivePort(), connectionInfo.getDatabase()));
+            if (StrUtil.isNotBlank(connectionInfo.getSchema())) {
+                builder.append("?currentSchema=").append(connectionInfo.getSchema());
             }
             return builder.toString();
         }
     },
-    DAMENG("Dameng", 5236, "dm.jdbc.driver.DmDriver", "SELECT 1 FROM DUAL", true, false, false, true) {
+    DAMENG("Dameng", 5236, "dm.jdbc.driver.DmDriver", "SELECT 1 FROM DUAL", true, false, false, true,
+            true, true, true, "系统视图 -> JDBC Metadata") {
         @Override
-        public String buildJdbcUrl(String host, int port, String database, String schema) {
-            StringBuilder builder = new StringBuilder(String.format("jdbc:dm://%s:%d", host, port));
-            if (StrUtil.isNotBlank(database)) {
-                builder.append("/").append(database);
+        protected String doBuildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
+            StringBuilder builder = new StringBuilder(String.format("jdbc:dm://%s:%d",
+                    connectionInfo.getHost(), connectionInfo.getEffectivePort()));
+            if (StrUtil.isNotBlank(connectionInfo.getDatabase())) {
+                builder.append("/").append(connectionInfo.getDatabase());
             }
-            if (StrUtil.isNotBlank(schema)) {
-                builder.append(builder.indexOf("?") > -1 ? "&" : "?").append("schema=").append(schema);
+            if (StrUtil.isNotBlank(connectionInfo.getSchema())) {
+                builder.append(builder.indexOf("?") > -1 ? "&" : "?").append("schema=").append(connectionInfo.getSchema());
             }
             return builder.toString();
         }
@@ -69,11 +82,38 @@ public enum DatabaseType {
     private final boolean mysqlLike;
     private final boolean pgLike;
     private final boolean oracleLike;
+    private final boolean supportsDatabase;
+    private final boolean supportsSchema;
+    private final boolean supportsJdbcUrl;
+    private final String metadataStrategy;
 
     /**
      * 构造 JDBC 连接串。
      */
-    public abstract String buildJdbcUrl(String host, int port, String database, String schema);
+    protected abstract String doBuildJdbcUrl(DatabaseConnectionInfo connectionInfo);
+
+    public String buildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
+        String jdbcUrl = doBuildJdbcUrl(connectionInfo);
+        if (connectionInfo.getJdbcParameters() == null || connectionInfo.getJdbcParameters().isEmpty()) {
+            return jdbcUrl;
+        }
+        StringBuilder builder = new StringBuilder(jdbcUrl);
+        boolean hasQuery = jdbcUrl.contains("?");
+        for (var entry : connectionInfo.getJdbcParameters().entrySet()) {
+            if (StrUtil.isBlank(entry.getKey()) || StrUtil.isBlank(entry.getValue())) {
+                continue;
+            }
+            if (isReservedParameter(entry.getKey(), connectionInfo)) {
+                continue;
+            }
+            builder.append(hasQuery ? "&" : "?")
+                    .append(entry.getKey())
+                    .append("=")
+                    .append(entry.getValue());
+            hasQuery = true;
+        }
+        return builder.toString();
+    }
 
     public DriverDescriptor toDescriptor() {
         return DriverDescriptor.builder()
@@ -86,7 +126,22 @@ public enum DatabaseType {
                 .mysqlLike(mysqlLike)
                 .pgLike(pgLike)
                 .oracleLike(oracleLike)
+                .supportsDatabase(supportsDatabase)
+                .supportsSchema(supportsSchema)
+                .supportsJdbcUrl(supportsJdbcUrl)
+                .metadataStrategy(metadataStrategy)
                 .build();
+    }
+
+    private boolean isReservedParameter(String parameterName, DatabaseConnectionInfo connectionInfo) {
+        if (connectionInfo == null || StrUtil.isBlank(parameterName)) {
+            return false;
+        }
+        String lower = parameterName.toLowerCase();
+        if ((this == POSTGRESQL || this == KINGBASE) && "currentschema".equals(lower) && StrUtil.isNotBlank(connectionInfo.getSchema())) {
+            return true;
+        }
+        return this == DAMENG && "schema".equals(lower) && StrUtil.isNotBlank(connectionInfo.getSchema());
     }
 
     public static DatabaseType fromCode(String code) {

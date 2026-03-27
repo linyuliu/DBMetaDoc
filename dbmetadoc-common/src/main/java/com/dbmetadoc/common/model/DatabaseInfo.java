@@ -22,6 +22,9 @@ public class DatabaseInfo implements Serializable {
     private String type;
     private String version;
     private String driverName;
+    private String databaseName;
+    private String schemaName;
+    private String catalogName;
     private String charset;
     private String collation;
     private List<TableInfo> tables;

@@ -28,7 +28,8 @@ class DriverServiceTest {
                         && item.getPgLike()
                         && item.getMysqlLike()
                         && item.getOracleLike()
-                        && item.getTestSql().contains("自动识别兼容模式")));
+                        && item.getTestSql().contains("自动识别兼容模式")
+                        && item.getMetadataStrategy().contains("模式探测")));
         assertTrue(drivers.stream().anyMatch(item -> "DAMENG".equals(item.getType()) && "SELECT 1 FROM DUAL".equals(item.getTestSql())));
         assertTrue(drivers.stream().allMatch(item -> assertDescriptor(item)));
     }
@@ -37,6 +38,8 @@ class DriverServiceTest {
         assertNotNull(response.getDriverClass());
         assertNotNull(response.getLabel());
         assertNotNull(response.getDefaultPort());
+        assertNotNull(response.getMetadataStrategy());
+        assertNotNull(response.getSupportsJdbcUrl());
         return true;
     }
 }

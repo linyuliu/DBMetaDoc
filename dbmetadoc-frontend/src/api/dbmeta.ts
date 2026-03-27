@@ -11,12 +11,17 @@ export interface DriverInfo {
   mysqlLike: boolean
   pgLike: boolean
   oracleLike: boolean
+  supportsDatabase: boolean
+  supportsSchema: boolean
+  supportsJdbcUrl: boolean
+  metadataStrategy: string
 }
 
 export interface DatasourceDetail {
   id: number
   name: string
   dbType: string
+  jdbcUrl?: string | null
   host: string
   port: number
   database: string
@@ -32,6 +37,7 @@ export interface DatasourceDetail {
 
 export interface DocumentPayload {
   dbType: string
+  jdbcUrl?: string
   host: string
   port: number
   database: string

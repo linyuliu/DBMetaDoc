@@ -1,8 +1,14 @@
 # ${title}
 
-**Database:** ${database.name}
+**Database:** ${database.databaseName!database.name}
 **Type:** ${database.type}
-<#if database.version??>>**Version:** ${database.version}
+<#if database.schemaName??>**Schema:** ${database.schemaName}
+</#if>
+<#if database.charset??>**Charset:** ${database.charset}
+</#if>
+<#if database.collation??>**Collation:** ${database.collation}
+</#if>
+<#if database.version??>**Version:** ${database.version}
 </#if>
 
 ---
@@ -11,13 +17,19 @@
 <#list database.tables as table>
 ## ${table_index + 1}. ${table.name}<#if table.comment??> - ${table.comment}</#if>
 
+**Schema:** ${table.schema!""}
+<#if table.engine??> | **Engine:** ${table.engine}</#if>
+<#if table.charset??> | **Charset:** ${table.charset}</#if>
+<#if table.collation??> | **Collation:** ${table.collation}</#if>
+<#if table.rowFormat??> | **Row Format:** ${table.rowFormat}</#if>
+
 ### Columns
 
-| # | Column | Type | Length | Nullable | Default | Comment |
-|---|--------|------|--------|----------|---------|---------|
+| # | Column | Type | Raw Type | Length | Nullable | Default | Auto | Generated | Comment |
+|---|--------|------|----------|--------|----------|---------|------|-----------|---------|
 <#if table.columns?has_content>
 <#list table.columns as col>
-| ${col_index + 1} | **<#if col.primaryKey>PK </#if>${col.name}** | ${col.type!""} | ${col.length!""} | ${col.nullable?string("YES","NO")} | ${col.defaultValue!""} | ${col.comment!""} |
+| ${col_index + 1} | **<#if col.primaryKey>PK </#if>${col.name}** | ${col.type!""} | ${col.rawType!""} | ${col.length!""} | ${col.nullable?string("YES","NO")} | ${col.defaultValue!""} | ${col.autoIncrement?string("YES","NO")} | ${col.generated?string("YES","NO")} | ${col.comment!""} |
 </#list>
 </#if>
 

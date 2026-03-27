@@ -31,4 +31,12 @@ public class DriverDescriptor {
     private boolean pgLike;
 
     private boolean oracleLike;
+
+    private boolean supportsDatabase;
+
+    private boolean supportsSchema;
+
+    private boolean supportsJdbcUrl;
+
+    private String metadataStrategy;
 }

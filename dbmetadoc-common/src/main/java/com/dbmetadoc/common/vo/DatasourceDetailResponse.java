@@ -16,6 +16,7 @@ public class DatasourceDetailResponse {
     private Long id;
     private String name;
     private String dbType;
+    private String jdbcUrl;
     private String host;
     private Integer port;
     private String database;

@@ -19,27 +19,40 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 <body>
 <h1>${title}</h1>
 <div class="db-info">
-  <strong>Database:</strong> ${database.name}&#160;
+  <strong>Database:</strong> ${database.databaseName!database.name}&#160;
   <strong>Type:</strong> ${database.type}&#160;
+  <#if database.schemaName??><strong>Schema:</strong> ${database.schemaName}&#160;</#if>
+  <#if database.charset??><strong>Charset:</strong> ${database.charset}&#160;</#if>
+  <#if database.collation??><strong>Collation:</strong> ${database.collation}&#160;</#if>
   <#if database.version??><strong>Version:</strong> ${database.version}</#if>
 </div>
 
 <#if database.tables?has_content>
 <#list database.tables as table>
 <h2>${table_index + 1}. ${table.name}<#if table.comment??> - ${table.comment}</#if></h2>
+<p>
+  <strong>Schema:</strong> ${table.schema!""}
+  <#if table.engine??>&#160;<strong>Engine:</strong> ${table.engine}</#if>
+  <#if table.charset??>&#160;<strong>Charset:</strong> ${table.charset}</#if>
+  <#if table.collation??>&#160;<strong>Collation:</strong> ${table.collation}</#if>
+  <#if table.rowFormat??>&#160;<strong>Row Format:</strong> ${table.rowFormat}</#if>
+</p>
 
 <h3>Columns</h3>
 <table>
-  <tr><th>#</th><th>Column Name</th><th>Type</th><th>Length</th><th>Nullable</th><th>Default</th><th>Comment</th></tr>
+  <tr><th>#</th><th>Column Name</th><th>Type</th><th>Raw Type</th><th>Length</th><th>Nullable</th><th>Default</th><th>Auto</th><th>Generated</th><th>Comment</th></tr>
   <#if table.columns?has_content>
   <#list table.columns as col>
   <tr>
     <td>${col_index + 1}</td>
     <td class="${col.primaryKey?string("pk", "")}">${col.name}</td>
     <td>${col.type!""}</td>
+    <td>${col.rawType!""}</td>
     <td>${col.length!""}</td>
     <td>${col.nullable?string("YES","NO")}</td>
     <td>${col.defaultValue!""}</td>
+    <td>${col.autoIncrement?string("YES","NO")}</td>
+    <td>${col.generated?string("YES","NO")}</td>
     <td>${col.comment!""}</td>
   </tr>
   </#list>

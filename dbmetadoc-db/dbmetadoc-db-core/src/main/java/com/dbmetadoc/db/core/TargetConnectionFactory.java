@@ -1,5 +1,7 @@
 package com.dbmetadoc.db.core;
 
+import cn.hutool.core.util.StrUtil;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -31,10 +33,9 @@ public final class TargetConnectionFactory {
      * 构造目标数据库 JDBC URL。
      */
     public static String buildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
-        return connectionInfo.getType().buildJdbcUrl(
-                connectionInfo.getHost(),
-                connectionInfo.getEffectivePort(),
-                connectionInfo.getDatabase(),
-                connectionInfo.getSchema());
+        if (StrUtil.isNotBlank(connectionInfo.getResolvedJdbcUrl())) {
+            return connectionInfo.getResolvedJdbcUrl();
+        }
+        return connectionInfo.getType().buildJdbcUrl(connectionInfo);
     }
 }

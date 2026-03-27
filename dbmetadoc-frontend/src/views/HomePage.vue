@@ -49,6 +49,13 @@
               </el-select>
             </el-form-item>
 
+            <el-form-item label="JDBC URL" class="span-2">
+              <el-input
+                v-model="form.jdbcUrl"
+                placeholder="可选。结构化字段优先，未填写的 host / port / database / schema 会尝试从这里解析"
+              />
+            </el-form-item>
+
             <el-form-item label="主机地址" prop="host">
               <el-input v-model="form.host" placeholder="例如：127.0.0.1" />
             </el-form-item>
@@ -62,7 +69,7 @@
             </el-form-item>
 
             <el-form-item label="Schema">
-              <el-input v-model="form.schema" placeholder="可选，PG 默认 public" />
+              <el-input v-model="form.schema" placeholder="可选。PG / Kingbase 可填，Oracle / 达梦默认用户名大写" />
             </el-form-item>
 
             <el-form-item label="用户名" prop="username">
@@ -100,10 +107,12 @@
           <div class="driver-strip" v-if="activeDriver">
             <el-tag>{{ activeDriver.driverClass }}</el-tag>
             <el-tag type="info">测试语句：{{ activeDriver.testSql }}</el-tag>
+            <el-tag type="info">策略：{{ activeDriver.metadataStrategy }}</el-tag>
             <el-tag v-if="activeDriver.domestic" type="warning">国产数据库</el-tag>
             <el-tag v-if="activeDriver.mysqlLike" type="success">MySQL-like</el-tag>
             <el-tag v-if="activeDriver.pgLike" type="primary">PG-like</el-tag>
             <el-tag v-if="activeDriver.oracleLike" type="danger">Oracle-like</el-tag>
+            <el-tag v-if="activeDriver.supportsJdbcUrl" type="info">支持 JDBC URL</el-tag>
           </div>
 
           <div class="action-row">
@@ -162,6 +171,7 @@
               <div class="driver-meta">
                 <span>端口 {{ driver.defaultPort }}</span>
                 <span>{{ driver.testSql }}</span>
+                <span>{{ driver.metadataStrategy }}</span>
               </div>
             </div>
           </div>
@@ -197,6 +207,7 @@ interface FormModel {
   remark: string
   enabled: boolean
   dbType: string
+  jdbcUrl: string
   host: string
   port: number
   database: string
@@ -226,6 +237,7 @@ const form = reactive<FormModel>({
   remark: '',
   enabled: true,
   dbType: 'MYSQL',
+  jdbcUrl: '',
   host: '127.0.0.1',
   port: 3306,
   database: '',
@@ -240,8 +252,26 @@ const form = reactive<FormModel>({
 
 const rules: FormRules<FormModel> = {
   dbType: [{ required: true, message: '请选择数据库类型', trigger: 'change' }],
-  host: [{ required: true, message: '请输入主机地址', trigger: 'blur' }],
-  database: [{ required: true, message: '请输入数据库名', trigger: 'blur' }],
+  host: [{
+    validator: (_rule, value, callback) => {
+      if (value || form.jdbcUrl) {
+        callback()
+        return
+      }
+      callback(new Error('请输入主机地址，或填写 JDBC URL'))
+    },
+    trigger: 'blur'
+  }],
+  database: [{
+    validator: (_rule, value, callback) => {
+      if (value || form.jdbcUrl) {
+        callback()
+        return
+      }
+      callback(new Error('请输入数据库名，或填写 JDBC URL'))
+    },
+    trigger: 'blur'
+  }],
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
   format: [{ required: true, message: '请选择导出格式', trigger: 'change' }]
@@ -281,6 +311,7 @@ function handleDriverChange(type: string) {
 function buildPayload(): DocumentPayload {
   return {
     dbType: form.dbType,
+    jdbcUrl: form.jdbcUrl,
     host: form.host,
     port: form.port,
     database: form.database,
@@ -382,6 +413,7 @@ async function applyDatasource(id: number) {
   form.remark = detail.remark || ''
   form.enabled = detail.enabled ?? true
   form.dbType = detail.dbType
+  form.jdbcUrl = detail.jdbcUrl || ''
   form.host = detail.host
   form.port = detail.port
   form.database = detail.database
@@ -415,6 +447,7 @@ function resetForm() {
   form.remark = ''
   form.enabled = true
   form.dbType = drivers.value[0]?.type || 'MYSQL'
+  form.jdbcUrl = ''
   form.host = '127.0.0.1'
   form.port = drivers.value[0]?.defaultPort || 3306
   form.database = ''

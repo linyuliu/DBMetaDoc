@@ -13,7 +13,9 @@ import com.dbmetadoc.db.core.DatabaseConnectionInfo;
 import com.dbmetadoc.db.core.DatabaseType;
 import com.dbmetadoc.db.core.DriverDescriptor;
 import com.dbmetadoc.db.core.MetadataExtractorRegistry;
+import com.dbmetadoc.db.core.ResolvedConnectionInfo;
 import com.dbmetadoc.app.repository.DatasourceProfileRepository;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +25,14 @@ import java.util.List;
  * 数据源模板服务。
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DatasourceService {
 
     private final DatasourceProfileRepository datasourceProfileRepository;
     private final TargetDatabaseService targetDatabaseService;
     private final MetadataExtractorRegistry metadataExtractorRegistry;
+    private final ConnectionInfoResolver connectionInfoResolver;
 
     public List<DatasourceDetailResponse> list() {
         return datasourceProfileRepository.findAll().stream()
@@ -43,25 +47,30 @@ public class DatasourceService {
     }
 
     public void test(DatasourceTestRequest request) {
-        targetDatabaseService.testConnection(toConnectionInfo(request));
+        ResolvedConnectionInfo resolvedConnectionInfo = resolveConnectionInfo(request);
+        targetDatabaseService.testConnection(resolvedConnectionInfo.toDatabaseConnectionInfo());
     }
 
     public DatasourceDetailResponse save(DatasourceSaveRequest request) {
         if (request.getId() != null && datasourceProfileRepository.findById(request.getId()).isEmpty()) {
             throw new BusinessException(ResultCode.DATASOURCE_NOT_FOUND, "待更新的数据源不存在: " + request.getId());
         }
-        DatabaseConnectionInfo connectionInfo = toConnectionInfo(request);
+        ResolvedConnectionInfo resolvedConnectionInfo = resolveConnectionInfo(request);
+        DatabaseConnectionInfo connectionInfo = resolvedConnectionInfo.toDatabaseConnectionInfo();
         targetDatabaseService.testConnection(connectionInfo);
         DriverDescriptor descriptor = metadataExtractorRegistry.getDriverDescriptor(connectionInfo.getType());
+        log.info("保存数据源模板，名称：{}，数据库类型：{}，主机：{}，数据库：{}，Schema：{}",
+                request.getName(), connectionInfo.getType().name(), connectionInfo.getHost(),
+                connectionInfo.getDatabase(), connectionInfo.getSchema());
 
         DatasourceProfile profile = datasourceProfileRepository.save(DatasourceProfile.builder()
                 .id(request.getId())
                 .name(request.getName())
                 .dbType(connectionInfo.getType().name())
-                .host(request.getHost())
+                .host(connectionInfo.getHost())
                 .port(connectionInfo.getEffectivePort())
-                .databaseName(request.getDatabase())
-                .schemaName(request.getSchema())
+                .databaseName(connectionInfo.getDatabase())
+                .schemaName(connectionInfo.getSchema())
                 .username(request.getUsername())
                 .driverClass(StrUtil.blankToDefault(request.getDriverClass(), descriptor.getDriverClass()))
                 .remark(request.getRemark())
@@ -78,16 +87,11 @@ public class DatasourceService {
     }
 
     public DatabaseConnectionInfo toConnectionInfo(ConnectionRequest request) {
-        DatabaseType databaseType = DatabaseType.fromCode(request.getDbType());
-        return DatabaseConnectionInfo.builder()
-                .type(databaseType)
-                .host(request.getHost())
-                .port(request.getPort())
-                .database(request.getDatabase())
-                .schema(request.getSchema())
-                .username(request.getUsername())
-                .password(request.getPassword())
-                .build();
+        return resolveConnectionInfo(request).toDatabaseConnectionInfo();
+    }
+
+    public ResolvedConnectionInfo resolveConnectionInfo(ConnectionRequest request) {
+        return connectionInfoResolver.resolve(request);
     }
 
     private DatasourceDetailResponse toResponse(DatasourceProfile profile) {
@@ -97,6 +101,7 @@ public class DatasourceService {
                 .id(profile.getId())
                 .name(profile.getName())
                 .dbType(profile.getDbType())
+                .jdbcUrl(null)
                 .host(profile.getHost())
                 .port(profile.getPort())
                 .database(profile.getDatabaseName())

@@ -38,8 +38,11 @@ public class WordDocumentGenerator implements DocumentGenerator {
             // Database info
             XWPFParagraph infoPara = document.createParagraph();
             XWPFRun infoRun = infoPara.createRun();
-            infoRun.setText("Database: " + databaseInfo.getName()
+            infoRun.setText("Database: " + (databaseInfo.getDatabaseName() != null ? databaseInfo.getDatabaseName() : databaseInfo.getName())
                     + "  Type: " + databaseInfo.getType()
+                    + (databaseInfo.getSchemaName() != null ? "  Schema: " + databaseInfo.getSchemaName() : "")
+                    + (databaseInfo.getCharset() != null ? "  Charset: " + databaseInfo.getCharset() : "")
+                    + (databaseInfo.getCollation() != null ? "  Collation: " + databaseInfo.getCollation() : "")
                     + (databaseInfo.getVersion() != null ? "  Version: " + databaseInfo.getVersion() : ""));
 
             if (databaseInfo.getTables() != null) {
@@ -54,6 +57,13 @@ public class WordDocumentGenerator implements DocumentGenerator {
                         headingText += " - " + table.getComment();
                     }
                     headingRun.setText(headingText);
+
+                    XWPFParagraph tableMeta = document.createParagraph();
+                    tableMeta.createRun().setText("Schema: " + safe(table.getSchema())
+                            + "  Engine: " + safe(table.getEngine())
+                            + "  Charset: " + safe(table.getCharset())
+                            + "  Collation: " + safe(table.getCollation())
+                            + "  RowFormat: " + safe(table.getRowFormat()));
 
                     // Columns heading
                     XWPFParagraph colHeading = document.createParagraph();
@@ -70,9 +80,12 @@ public class WordDocumentGenerator implements DocumentGenerator {
                         setCell(headerRow, 0, "#");
                         addCell(headerRow, "Column Name");
                         addCell(headerRow, "Type");
+                        addCell(headerRow, "Raw Type");
                         addCell(headerRow, "Length");
                         addCell(headerRow, "Nullable");
                         addCell(headerRow, "Default");
+                        addCell(headerRow, "Auto");
+                        addCell(headerRow, "Generated");
                         addCell(headerRow, "Comment");
                         addCell(headerRow, "PK");
 
@@ -82,11 +95,14 @@ public class WordDocumentGenerator implements DocumentGenerator {
                             setCell(row, 0, String.valueOf(colIdx++));
                             setCell(row, 1, col.getName());
                             setCell(row, 2, col.getType() != null ? col.getType() : "");
-                            setCell(row, 3, col.getLength() != null ? String.valueOf(col.getLength()) : "");
-                            setCell(row, 4, Boolean.TRUE.equals(col.getNullable()) ? "YES" : "NO");
-                            setCell(row, 5, col.getDefaultValue() != null ? col.getDefaultValue() : "");
-                            setCell(row, 6, col.getComment() != null ? col.getComment() : "");
-                            setCell(row, 7, Boolean.TRUE.equals(col.getPrimaryKey()) ? "YES" : "");
+                            setCell(row, 3, col.getRawType() != null ? col.getRawType() : "");
+                            setCell(row, 4, col.getLength() != null ? String.valueOf(col.getLength()) : "");
+                            setCell(row, 5, Boolean.TRUE.equals(col.getNullable()) ? "YES" : "NO");
+                            setCell(row, 6, col.getDefaultValue() != null ? col.getDefaultValue() : "");
+                            setCell(row, 7, Boolean.TRUE.equals(col.getAutoIncrement()) ? "YES" : "NO");
+                            setCell(row, 8, Boolean.TRUE.equals(col.getGenerated()) ? "YES" : "NO");
+                            setCell(row, 9, col.getComment() != null ? col.getComment() : "");
+                            setCell(row, 10, Boolean.TRUE.equals(col.getPrimaryKey()) ? "YES" : "");
                         }
                     }
 
@@ -117,5 +133,9 @@ public class WordDocumentGenerator implements DocumentGenerator {
     private void addCell(XWPFTableRow row, String text) {
         XWPFTableCell cell = row.addNewTableCell();
         cell.setText(text != null ? text : "");
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value;
     }
 }

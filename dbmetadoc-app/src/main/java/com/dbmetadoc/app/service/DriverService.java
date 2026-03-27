@@ -28,6 +28,10 @@ public class DriverService {
                         .mysqlLike(descriptor.isMysqlLike())
                         .pgLike(descriptor.isPgLike())
                         .oracleLike(descriptor.isOracleLike())
+                        .supportsDatabase(descriptor.isSupportsDatabase())
+                        .supportsSchema(descriptor.isSupportsSchema())
+                        .supportsJdbcUrl(descriptor.isSupportsJdbcUrl())
+                        .metadataStrategy(descriptor.getMetadataStrategy())
                         .build())
                 .toList();
     }

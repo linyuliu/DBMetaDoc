@@ -2,8 +2,10 @@ package com.dbmetadoc.app.service;
 
 import com.dbmetadoc.common.dto.DatasourceSaveRequest;
 import com.dbmetadoc.common.entity.DatasourceProfile;
+import com.dbmetadoc.db.core.DatabaseConnectionInfo;
 import com.dbmetadoc.db.core.DatabaseType;
 import com.dbmetadoc.db.core.MetadataExtractorRegistry;
+import com.dbmetadoc.db.core.ResolvedConnectionInfo;
 import com.dbmetadoc.app.repository.DatasourceProfileRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,9 @@ class DatasourceServiceTest {
     @Mock
     private MetadataExtractorRegistry metadataExtractorRegistry;
 
+    @Mock
+    private ConnectionInfoResolver connectionInfoResolver;
+
     @InjectMocks
     private DatasourceService datasourceService;
 
@@ -49,6 +54,24 @@ class DatasourceServiceTest {
             return profile;
         });
         when(metadataExtractorRegistry.getDriverDescriptor(DatabaseType.MYSQL)).thenReturn(DatabaseType.MYSQL.toDescriptor());
+        DatabaseConnectionInfo connectionInfo = DatabaseConnectionInfo.builder()
+                .type(DatabaseType.MYSQL)
+                .host("127.0.0.1")
+                .port(3306)
+                .database("demo")
+                .username("root")
+                .password("123456")
+                .resolvedJdbcUrl("jdbc:mysql://127.0.0.1:3306/demo?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true")
+                .build();
+        when(connectionInfoResolver.resolve(any())).thenReturn(ResolvedConnectionInfo.builder()
+                .type(DatabaseType.MYSQL)
+                .host("127.0.0.1")
+                .port(3306)
+                .database("demo")
+                .username("root")
+                .password("123456")
+                .resolvedJdbcUrl(connectionInfo.getResolvedJdbcUrl())
+                .build());
 
         var response = datasourceService.save(request);
 
