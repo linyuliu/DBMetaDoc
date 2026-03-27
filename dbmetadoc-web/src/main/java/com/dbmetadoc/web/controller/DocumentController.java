@@ -53,14 +53,15 @@ public class DocumentController {
 
             return new ResponseEntity<>(content, headers, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
+            log.warn("Invalid generate request: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .contentType(MediaType.TEXT_PLAIN)
-                    .body(("Invalid request: " + e.getMessage()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .body("Invalid request parameters".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         } catch (Exception e) {
             log.error("Error generating document", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.TEXT_PLAIN)
-                    .body(("Error generating document: " + e.getMessage()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    .body("An internal error occurred while generating the document".getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
@@ -76,10 +77,12 @@ public class DocumentController {
                     .contentType(MediaType.TEXT_HTML)
                     .body(html);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid request: " + e.getMessage());
+            log.warn("Invalid preview request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid request parameters");
         } catch (Exception e) {
+            log.error("Error generating preview", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error generating preview: " + e.getMessage());
+                    .body("An internal error occurred while generating the preview");
         }
     }
 
