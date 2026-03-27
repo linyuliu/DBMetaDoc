@@ -83,10 +83,10 @@ public class WordDocumentGenerator implements DocumentGenerator {
                             setCell(row, 1, col.getName());
                             setCell(row, 2, col.getType() != null ? col.getType() : "");
                             setCell(row, 3, col.getLength() != null ? String.valueOf(col.getLength()) : "");
-                            setCell(row, 4, col.isNullable() ? "YES" : "NO");
+                            setCell(row, 4, Boolean.TRUE.equals(col.getNullable()) ? "YES" : "NO");
                             setCell(row, 5, col.getDefaultValue() != null ? col.getDefaultValue() : "");
                             setCell(row, 6, col.getComment() != null ? col.getComment() : "");
-                            setCell(row, 7, col.isPrimaryKey() ? "YES" : "");
+                            setCell(row, 7, Boolean.TRUE.equals(col.getPrimaryKey()) ? "YES" : "");
                         }
                     }
 

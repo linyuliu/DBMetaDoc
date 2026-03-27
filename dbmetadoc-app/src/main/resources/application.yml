@@ -1,0 +1,33 @@
+server:
+  port: 9001
+
+spring:
+  application:
+    name: dbmetadoc
+  datasource:
+    url: jdbc:mysql://${DBMETA_DB_HOST:xxx}:${DBMETA_DB_PORT:3306}/${DBMETA_DB_NAME:dbmeta}?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DBMETA_DB_USER:root}
+    password: ${DBMETA_DB_PASSWORD:xxx}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  freemarker:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      schema-locations: classpath:sql/schema.sql
+
+logging:
+  level:
+    com.dbmetadoc: DEBUG
+
+dbmetadoc:
+  cache:
+    ttl-hours: 12
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://127.0.0.1:5173
+    allowed-methods:
+      - GET
+      - POST

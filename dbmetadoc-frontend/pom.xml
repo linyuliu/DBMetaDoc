@@ -11,48 +11,7 @@
     </parent>
 
     <artifactId>dbmetadoc-frontend</artifactId>
-    <packaging>jar</packaging>
-    <name>DBMetaDoc Frontend</name>
-    <description>Vue 3 frontend application</description>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.15.0</version>
-                <configuration>
-                    <nodeVersion>v20.11.1</nodeVersion>
-                    <npmVersion>10.2.4</npmVersion>
-                    <workingDirectory>${project.basedir}</workingDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>npm install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>install</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run build</arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <packaging>pom</packaging>
+    <name>DBMetaDoc 前端模块</name>
+    <description>Vue 3 + TypeScript 前端工程，使用本地 Node 构建</description>
 </project>

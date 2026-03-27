@@ -16,7 +16,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -24,7 +24,8 @@ const htmlContent = ref('')
 const route = useRoute()
 
 onMounted(() => {
-  htmlContent.value = route.query.content || sessionStorage.getItem('previewContent') || ''
+  const routeContent = Array.isArray(route.query.content) ? route.query.content[0] : route.query.content
+  htmlContent.value = routeContent || sessionStorage.getItem('previewContent') || ''
 })
 </script>
 

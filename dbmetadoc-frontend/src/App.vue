@@ -1,53 +1,25 @@
 <template>
-  <div>
-    <el-container>
-      <el-header>
-        <div class="nav-bar">
-          <span class="title">DBMetaDoc 数据库文档生成工具</span>
-          <router-link to="/" class="nav-link">首页</router-link>
-        </div>
-      </el-header>
-      <el-main>
-        <router-view />
-      </el-main>
-    </el-container>
-  </div>
+  <router-view />
 </template>
 
-<script setup>
-</script>
-
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, sans-serif; }
-
-.el-header {
-  background-color: #2c3e50;
-  color: white;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
+* {
+  box-sizing: border-box;
 }
 
-.nav-bar {
-  display: flex;
-  align-items: center;
-  width: 100%;
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
 }
 
-.title {
-  font-size: 20px;
-  font-weight: bold;
-  flex: 1;
-}
-
-.nav-link {
-  color: white;
-  text-decoration: none;
-  margin-left: 20px;
-}
-
-.nav-link:hover {
-  text-decoration: underline;
+body {
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(72, 153, 203, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(34, 84, 61, 0.16), transparent 26%),
+    linear-gradient(180deg, #f3f8f6 0%, #eef3f8 100%);
+  color: #14212d;
 }
 </style>

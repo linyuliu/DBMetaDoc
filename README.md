@@ -4,11 +4,11 @@
 
 ## 功能特性
 
-- 🗄️ **多数据库支持**：MySQL 5.x/8.x、PostgreSQL、人大金仓（KingBase）
-- 📄 **多格式输出**：HTML、Markdown、PDF、Word（docx）
-- 🎨 **样式可定制**：基于 FreeMarker 模板，支持自定义样式
-- 🌐 **前端界面**：Vue 3 + Element Plus，支持在线预览和文档下载
-- 🔌 **REST API**：Spring Boot 3 提供标准 HTTP 接口
+- 多数据库支持：MySQL、PostgreSQL、Oracle、人大金仓（Kingbase）、达梦
+- 多格式输出：HTML、Markdown、PDF、Word（docx）
+- 单体部署：前端构建产物直接打进 Spring Boot 应用
+- REST API：统一 `R<T>` 返回，导出接口返回文件流
+- 数据源模板：保存前强制连接测试，不持久化密码
 
 ## 项目结构
 
@@ -16,14 +16,21 @@
 DBMetaDoc/
 ├── pom.xml                    # 父 POM（多模块）
 ├── dbmetadoc-common/          # 公共模型（TableInfo, ColumnInfo 等）
-├── dbmetadoc-db/              # 数据库元数据提取
+├── dbmetadoc-db/              # 数据库能力聚合目录
+│   ├── dbmetadoc-db-core/     # SPI、连接信息、通用抽取支持
+│   ├── dbmetadoc-db-mysql/    # MySQL 实现
+│   ├── dbmetadoc-db-postgresql/ # PostgreSQL 实现
+│   ├── dbmetadoc-db-oracle/   # Oracle 实现
+│   ├── dbmetadoc-db-kingbase/ # Kingbase 实现
+│   ├── dbmetadoc-db-dameng/   # 达梦实现
+│   └── dbmetadoc-db-bundle/   # 供 app 引入的聚合实现
 │   └── lib/
 │       └── kingbase8-8.6.0.jar  # KingBase 驱动存根（替换为真实驱动）
 ├── dbmetadoc-generator/       # 文档生成（HTML/MD/PDF/Word）
 │   └── src/main/resources/templates/
 │       ├── html/database.ftl  # HTML 模板
 │       └── markdown/database.ftl  # Markdown 模板
-├── dbmetadoc-web/             # Spring Boot Web 应用 + REST API
+├── dbmetadoc-app/             # Spring Boot 应用 + REST API
 └── dbmetadoc-frontend/        # Vue 3 + Vite 前端
 ```
 
@@ -36,7 +43,7 @@ DBMetaDoc/
 | PDF 生成 | Flying Saucer + OpenPDF |
 | Word 生成 | Apache POI 5.2.5 |
 | 数据库驱动 | mysql-connector-j 8.3.0、PostgreSQL 42.7.2 |
-| 前端框架 | Vue 3 + Vite + Element Plus |
+| 前端框架 | Vue 3 + Vite + TypeScript + Element Plus |
 | 构建工具 | Maven |
 
 ## 快速开始
@@ -50,15 +57,16 @@ DBMetaDoc/
 ### 编译后端
 
 ```bash
-mvn compile -pl dbmetadoc-common,dbmetadoc-db,dbmetadoc-generator,dbmetadoc-web -am
+mvn compile -pl dbmetadoc-app -am
 ```
 
 ### 打包运行
 
 ```bash
-cd dbmetadoc-web
-mvn spring-boot:run
+build.cmd
 ```
+
+打包脚本会在 Windows 下自动探测代码页，不是 UTF-8 时会切到 `chcp 65001`，再执行前端构建和 Maven 打包。
 
 服务启动后访问：`http://localhost:8080`
 
@@ -89,14 +97,14 @@ mvn install:install-file \
 
 ## API 接口
 
-### 生成文档
+### 导出文档
 
 ```
-POST /api/document/generate
+POST /api/document/export
 Content-Type: application/json
 
 {
-  "dbType": "MYSQL",      // MYSQL | POSTGRESQL | KINGBASE
+  "dbType": "MYSQL",      // MYSQL | POSTGRESQL | ORACLE | KINGBASE | DAMENG
   "host": "localhost",
   "port": 3306,
   "database": "mydb",
@@ -112,7 +120,7 @@ Content-Type: application/json
 ```
 POST /api/document/preview
 Content-Type: application/json
-// 同上，返回 HTML 字符串
+// 同上，返回 R<PreviewResponse>
 ```
 
 ### 健康检查
@@ -125,10 +133,8 @@ GET /api/document/health
 
 HTML 和 Markdown 模板位于 `dbmetadoc-generator/src/main/resources/templates/` 目录下，可直接修改 FreeMarker 模板文件（`.ftl`）来定制输出样式。
 
-## 后续计划
+## 说明
 
-- 支持 Oracle、SQL Server 等更多数据库
-- 支持 Excel 格式输出
-- 用户自定义模板上传
-- ER 图自动生成
-- 数据库连接配置持久化
+- 数据源管理接口仅使用 `GET` 和 `POST`
+- 保存模板前必须先通过连接测试
+- 前端请求工具已支持 JSON、文件流和 `FormData`

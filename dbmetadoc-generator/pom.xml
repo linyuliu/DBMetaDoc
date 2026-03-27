@@ -13,7 +13,7 @@
     <artifactId>dbmetadoc-generator</artifactId>
     <packaging>jar</packaging>
     <name>DBMetaDoc Generator</name>
-    <description>Document generation module (HTML, Markdown, PDF, Word)</description>
+    <description>负责 HTML、Markdown、PDF、Word 文档生成</description>
 
     <dependencies>
         <dependency>

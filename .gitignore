@@ -34,6 +34,7 @@ replay_pid*
 
 # Frontend build output
 dbmetadoc-frontend/node_modules/
+dbmetadoc-frontend/node/
 dbmetadoc-frontend/dist/
 
 # macOS
