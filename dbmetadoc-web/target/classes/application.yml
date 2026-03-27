@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dbmetadoc
+  freemarker:
+    enabled: false
+
+logging:
+  level:
+    com.dbmetadoc: DEBUG

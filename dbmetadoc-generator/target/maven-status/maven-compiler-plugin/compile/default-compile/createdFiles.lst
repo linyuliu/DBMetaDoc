@@ -1,0 +1,7 @@
+com/dbmetadoc/generator/DocumentGenerator.class
+com/dbmetadoc/generator/HtmlDocumentGenerator.class
+com/dbmetadoc/generator/MarkdownDocumentGenerator.class
+com/dbmetadoc/generator/PdfDocumentGenerator.class
+com/dbmetadoc/generator/DocumentGeneratorFactory.class
+com/dbmetadoc/generator/WordDocumentGenerator.class
+com/dbmetadoc/generator/FreeMarkerConfig.class
