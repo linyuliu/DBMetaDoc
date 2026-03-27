@@ -3,16 +3,17 @@ package com.dbmetadoc.app.service;
 import com.dbmetadoc.common.enums.ResultCode;
 import com.dbmetadoc.common.exception.BusinessException;
 import com.dbmetadoc.common.model.DatabaseInfo;
+import com.zaxxer.hikari.HikariDataSource;
 import com.dbmetadoc.db.core.DatabaseConnectionInfo;
 import com.dbmetadoc.db.core.MetadataExtractorRegistry;
 import com.dbmetadoc.db.core.TargetConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
@@ -27,16 +28,22 @@ public class TargetDatabaseService {
 
     public void testConnection(DatabaseConnectionInfo connectionInfo) {
         long startTime = System.currentTimeMillis();
-        try (Connection connection = TargetConnectionFactory.create(connectionInfo);
-             PreparedStatement ps = connection.prepareStatement(
-                     metadataExtractorRegistry.getExtractor(connectionInfo.getType()).resolveTestSql(connection, connectionInfo));
-             ResultSet rs = ps.executeQuery()) {
-            if (!rs.next()) {
+        try (HikariDataSource dataSource = TargetConnectionFactory.createDataSource(connectionInfo);
+             Connection connection = dataSource.getConnection()) {
+            String testSql = metadataExtractorRegistry.getExtractor(connectionInfo.getType())
+                    .resolveTestSql(connection, connectionInfo);
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+            Boolean success = jdbcTemplate.query(testSql, (ResultSetExtractor<Boolean>) rs -> rs.next());
+            if (!Boolean.TRUE.equals(success)) {
                 throw new BusinessException(ResultCode.DATASOURCE_TEST_FAILED, "连接测试未返回结果");
             }
-            log.info("连接测试通过，数据库类型：{}，主机：{}，端口：{}，数据库：{}，耗时：{} ms",
-                    connectionInfo.getType().name(), connectionInfo.getHost(), connectionInfo.getEffectivePort(),
-                    connectionInfo.getDatabase(), System.currentTimeMillis() - startTime);
+            log.info("连接测试通过，数据库类型：{}，主机：{}，端口：{}，数据库：{}，测试SQL：{}，耗时：{} ms",
+                    connectionInfo.getType().name(),
+                    connectionInfo.getHost(),
+                    connectionInfo.getEffectivePort(),
+                    connectionInfo.getDatabase(),
+                    testSql,
+                    System.currentTimeMillis() - startTime);
         } catch (SQLException e) {
             throw new BusinessException(ResultCode.DATASOURCE_TEST_FAILED, "连接测试失败: " + e.getMessage(), e);
         }
@@ -44,7 +51,8 @@ public class TargetDatabaseService {
 
     public DatabaseInfo extract(DatabaseConnectionInfo connectionInfo) {
         long startTime = System.currentTimeMillis();
-        try (Connection connection = TargetConnectionFactory.create(connectionInfo)) {
+        try (HikariDataSource dataSource = TargetConnectionFactory.createDataSource(connectionInfo);
+             Connection connection = dataSource.getConnection()) {
             DatabaseInfo databaseInfo = metadataExtractorRegistry.getExtractor(connectionInfo.getType()).extract(connection, connectionInfo);
             log.info("目标库元数据提取完成，数据库类型：{}，数据库：{}，表数量：{}，耗时：{} ms",
                     connectionInfo.getType().name(), connectionInfo.getDatabase(),

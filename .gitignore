@@ -33,9 +33,9 @@ replay_pid*
 *.sts4-cache
 
 # Frontend build output
-dbmetadoc-frontend/node_modules/
-dbmetadoc-frontend/node/
-dbmetadoc-frontend/dist/
+dbmetadoc-web/node_modules/
+dbmetadoc-web/node/
+dbmetadoc-web/dist/
 
 # macOS
 .DS_Store

@@ -81,6 +81,7 @@ public class WordDocumentGenerator implements DocumentGenerator {
                         addCell(headerRow, "Column Name");
                         addCell(headerRow, "Type");
                         addCell(headerRow, "Raw Type");
+                        addCell(headerRow, "Java Type");
                         addCell(headerRow, "Length");
                         addCell(headerRow, "Nullable");
                         addCell(headerRow, "Default");
@@ -96,13 +97,14 @@ public class WordDocumentGenerator implements DocumentGenerator {
                             setCell(row, 1, col.getName());
                             setCell(row, 2, col.getType() != null ? col.getType() : "");
                             setCell(row, 3, col.getRawType() != null ? col.getRawType() : "");
-                            setCell(row, 4, col.getLength() != null ? String.valueOf(col.getLength()) : "");
-                            setCell(row, 5, Boolean.TRUE.equals(col.getNullable()) ? "YES" : "NO");
-                            setCell(row, 6, col.getDefaultValue() != null ? col.getDefaultValue() : "");
-                            setCell(row, 7, Boolean.TRUE.equals(col.getAutoIncrement()) ? "YES" : "NO");
-                            setCell(row, 8, Boolean.TRUE.equals(col.getGenerated()) ? "YES" : "NO");
-                            setCell(row, 9, col.getComment() != null ? col.getComment() : "");
-                            setCell(row, 10, Boolean.TRUE.equals(col.getPrimaryKey()) ? "YES" : "");
+                            setCell(row, 4, col.getJavaType() != null ? col.getJavaType() : "");
+                            setCell(row, 5, col.getLength() != null ? String.valueOf(col.getLength()) : "");
+                            setCell(row, 6, Boolean.TRUE.equals(col.getNullable()) ? "YES" : "NO");
+                            setCell(row, 7, col.getDefaultValue() != null ? col.getDefaultValue() : "");
+                            setCell(row, 8, Boolean.TRUE.equals(col.getAutoIncrement()) ? "YES" : "NO");
+                            setCell(row, 9, Boolean.TRUE.equals(col.getGenerated()) ? "YES" : "NO");
+                            setCell(row, 10, col.getComment() != null ? col.getComment() : "");
+                            setCell(row, 11, Boolean.TRUE.equals(col.getPrimaryKey()) ? "YES" : "");
                         }
                     }
 

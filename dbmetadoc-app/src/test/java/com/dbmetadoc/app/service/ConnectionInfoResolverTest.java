@@ -6,6 +6,7 @@ import com.dbmetadoc.db.core.DatabaseType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ConnectionInfoResolverTest {
@@ -61,6 +62,19 @@ class ConnectionInfoResolverTest {
         var resolved = resolver.resolve(request);
 
         assertEquals("SYSTEM", resolved.getSchema());
+    }
+
+    @Test
+    void shouldKeepKingbaseSchemaEmptyBeforeCompatibilityModeDetected() {
+        ConnectionRequest request = new ConnectionRequest();
+        request.setDbType("KINGBASE");
+        request.setJdbcUrl("jdbc:kingbase8://127.0.0.1:54321/demo_db");
+        request.setUsername("system");
+        request.setPassword("123456");
+
+        var resolved = resolver.resolve(request);
+
+        assertNull(resolved.getSchema());
     }
 
     @Test

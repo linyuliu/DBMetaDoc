@@ -139,7 +139,7 @@ public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor
         try (ResultSet rs = metaData.getColumns(catalog, schemaPattern, tableName, "%")) {
             while (rs.next()) {
                 String columnName = rs.getString("COLUMN_NAME");
-                columns.add(ColumnInfo.builder()
+                ColumnInfo columnInfo = ColumnInfo.builder()
                         .name(columnName)
                         .type(rs.getString("TYPE_NAME"))
                         .length(getInteger(rs, "COLUMN_SIZE"))
@@ -153,10 +153,34 @@ public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor
                         .comment(rs.getString("REMARKS"))
                         .ordinalPosition(getInteger(rs, "ORDINAL_POSITION"))
                         .rawType(rs.getString("TYPE_NAME"))
-                        .build());
+                        .build();
+                columns.add(completeColumn(columnInfo));
             }
         }
         return columns;
+    }
+
+    /**
+     * 在列对象构造完成后补齐 Java 类型等公共信息。
+     */
+    protected ColumnInfo completeColumn(ColumnInfo columnInfo) {
+        if (columnInfo == null) {
+            return null;
+        }
+        if (StrUtil.isBlank(columnInfo.getJavaType())) {
+            columnInfo.setJavaType(resolveJavaType(columnInfo));
+        }
+        if (StrUtil.isBlank(columnInfo.getJavaType())) {
+            columnInfo.setJavaType("String");
+        }
+        return columnInfo;
+    }
+
+    /**
+     * 解析列对应的 Java 类型，默认走通用兜底映射。
+     */
+    protected String resolveJavaType(ColumnInfo columnInfo) {
+        return JdbcJavaTypeResolver.resolveGeneric(columnInfo);
     }
 
     protected List<IndexInfo> extractIndexes(DatabaseMetaData metaData, String catalog, String schemaPattern, String tableName)

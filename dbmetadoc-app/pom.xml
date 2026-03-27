@@ -72,7 +72,7 @@
                 <directory>src/main/resources</directory>
             </resource>
             <resource>
-                <directory>${project.basedir}/../dbmetadoc-frontend/dist</directory>
+                <directory>${project.basedir}/../dbmetadoc-web/dist</directory>
                 <targetPath>static</targetPath>
             </resource>
         </resources>

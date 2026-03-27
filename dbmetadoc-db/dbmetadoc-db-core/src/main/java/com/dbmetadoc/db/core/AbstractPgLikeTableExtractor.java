@@ -156,7 +156,7 @@ public abstract class AbstractPgLikeTableExtractor extends AbstractJdbcMetadataE
                         continue;
                     }
                     String defaultValue = rs.getString("default_value");
-                    tableInfo.getColumns().add(ColumnInfo.builder()
+                    ColumnInfo columnInfo = ColumnInfo.builder()
                             .name(rs.getString("column_name"))
                             .type(rs.getString("data_type"))
                             .length(getInteger(rs, "char_length"))
@@ -170,7 +170,8 @@ public abstract class AbstractPgLikeTableExtractor extends AbstractJdbcMetadataE
                             .comment(StrUtil.trimToNull(rs.getString("column_comment")))
                             .ordinalPosition(getInteger(rs, "ordinal_position"))
                             .rawType(rs.getString("data_type"))
-                            .build());
+                            .build();
+                    tableInfo.getColumns().add(completeColumn(columnInfo));
                 }
             }
         }
@@ -320,5 +321,10 @@ public abstract class AbstractPgLikeTableExtractor extends AbstractJdbcMetadataE
             return List.of();
         }
         return StrUtil.splitTrim(columnNames, ',');
+    }
+
+    @Override
+    protected String resolveJavaType(ColumnInfo columnInfo) {
+        return JdbcJavaTypeResolver.resolvePgLike(columnInfo);
     }
 }

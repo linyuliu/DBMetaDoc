@@ -41,12 +41,17 @@ public class ConnectionInfoResolver {
         String database = pickText(request.getDatabase(), jdbcUrlParts.getDatabase());
         String schema = pickText(request.getSchema(), jdbcUrlParts.getSchema());
 
-        if (databaseType == DatabaseType.POSTGRESQL || databaseType == DatabaseType.KINGBASE) {
+        if (databaseType == DatabaseType.POSTGRESQL) {
             schema = pickText(schema,
                     jdbcUrlParts.getParameters().get("currentSchema"),
                     jdbcUrlParts.getParameters().get("currentschema"),
                     jdbcUrlParts.getParameters().get("current_schema"),
                     "public");
+        } else if (databaseType == DatabaseType.KINGBASE) {
+            schema = pickText(schema,
+                    jdbcUrlParts.getParameters().get("currentSchema"),
+                    jdbcUrlParts.getParameters().get("currentschema"),
+                    jdbcUrlParts.getParameters().get("current_schema"));
         } else if (databaseType == DatabaseType.ORACLE || databaseType == DatabaseType.DAMENG) {
             schema = pickText(schema, request.getUsername() == null ? null : request.getUsername().toUpperCase());
         }

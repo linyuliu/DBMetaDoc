@@ -131,7 +131,7 @@ public abstract class AbstractOracleLikeTableExtractor extends AbstractJdbcMetad
                     if (tableInfo == null) {
                         continue;
                     }
-                    tableInfo.getColumns().add(ColumnInfo.builder()
+                    ColumnInfo columnInfo = ColumnInfo.builder()
                             .name(rs.getString("COLUMN_NAME"))
                             .type(rs.getString("DATA_TYPE"))
                             .length(getInteger(rs, "DATA_LENGTH"))
@@ -145,7 +145,8 @@ public abstract class AbstractOracleLikeTableExtractor extends AbstractJdbcMetad
                             .comment(StrUtil.trimToNull(rs.getString("COMMENTS")))
                             .ordinalPosition(getInteger(rs, "COLUMN_ID"))
                             .rawType(rs.getString("DATA_TYPE"))
-                            .build());
+                            .build();
+                    tableInfo.getColumns().add(completeColumn(columnInfo));
                 }
             }
         }
@@ -398,5 +399,10 @@ public abstract class AbstractOracleLikeTableExtractor extends AbstractJdbcMetad
             this.unique = unique;
             this.type = type;
         }
+    }
+
+    @Override
+    protected String resolveJavaType(ColumnInfo columnInfo) {
+        return JdbcJavaTypeResolver.resolveOracleLike(columnInfo);
     }
 }

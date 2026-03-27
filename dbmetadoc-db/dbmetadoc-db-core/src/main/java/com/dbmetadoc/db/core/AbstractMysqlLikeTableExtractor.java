@@ -188,7 +188,7 @@ public abstract class AbstractMysqlLikeTableExtractor extends AbstractJdbcMetada
                 String type = rs.getString("Type");
                 ColumnTypeMeta columnTypeMeta = parseColumnType(type);
                 String extra = StrUtil.blankToDefault(rs.getString("Extra"), "");
-                columns.add(ColumnInfo.builder()
+                ColumnInfo columnInfo = ColumnInfo.builder()
                         .name(rs.getString("Field"))
                         .type(columnTypeMeta.baseType())
                         .length(columnTypeMeta.length())
@@ -202,7 +202,8 @@ public abstract class AbstractMysqlLikeTableExtractor extends AbstractJdbcMetada
                         .comment(normalizeComment(rs.getString("Comment")))
                         .ordinalPosition(ordinal++)
                         .rawType(type)
-                        .build());
+                        .build();
+                columns.add(completeColumn(columnInfo));
             }
         }
         return columns;
@@ -265,7 +266,7 @@ public abstract class AbstractMysqlLikeTableExtractor extends AbstractJdbcMetada
                             .ordinalPosition(getInteger(rs, "ORDINAL_POSITION"))
                             .rawType(rs.getString("COLUMN_TYPE"))
                             .build();
-                    tableInfo.getColumns().add(columnInfo);
+                    tableInfo.getColumns().add(completeColumn(columnInfo));
                 }
             }
         }
@@ -343,6 +344,11 @@ public abstract class AbstractMysqlLikeTableExtractor extends AbstractJdbcMetada
 
     protected String normalizeComment(String comment) {
         return StrUtil.trimToNull(comment);
+    }
+
+    @Override
+    protected String resolveJavaType(ColumnInfo columnInfo) {
+        return JdbcJavaTypeResolver.resolveMysqlLike(columnInfo);
     }
 
     protected String resolveCharsetFromCollation(String collation) {

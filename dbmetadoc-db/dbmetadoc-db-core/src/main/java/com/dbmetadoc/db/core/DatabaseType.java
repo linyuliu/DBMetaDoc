@@ -47,7 +47,7 @@ public enum DatabaseType {
         }
     },
     KINGBASE("KingbaseES", 54321, "com.kingbase8.Driver", "SELECT 1", true, true, true, true,
-            true, true, true, "模式识别 -> PG/Oracle/MySQL 兼容分支") {
+            true, true, true, "模式识别 -> PG 目录 / Oracle 字典 / Kingbase MySQL 信息模式") {
         @Override
         protected String doBuildJdbcUrl(DatabaseConnectionInfo connectionInfo) {
             StringBuilder builder = new StringBuilder(String.format("jdbc:kingbase8://%s:%d/%s",

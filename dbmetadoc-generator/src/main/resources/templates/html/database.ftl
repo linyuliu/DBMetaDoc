@@ -40,7 +40,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 
 <h3>Columns</h3>
 <table>
-  <tr><th>#</th><th>Column Name</th><th>Type</th><th>Raw Type</th><th>Length</th><th>Nullable</th><th>Default</th><th>Auto</th><th>Generated</th><th>Comment</th></tr>
+  <tr><th>#</th><th>Column Name</th><th>Type</th><th>Raw Type</th><th>Java Type</th><th>Length</th><th>Nullable</th><th>Default</th><th>Auto</th><th>Generated</th><th>Comment</th></tr>
   <#if table.columns?has_content>
   <#list table.columns as col>
   <tr>
@@ -48,6 +48,7 @@ tr:nth-child(even) { background-color: #f2f2f2; }
     <td class="${col.primaryKey?string("pk", "")}">${col.name}</td>
     <td>${col.type!""}</td>
     <td>${col.rawType!""}</td>
+    <td>${col.javaType!""}</td>
     <td>${col.length!""}</td>
     <td>${col.nullable?string("YES","NO")}</td>
     <td>${col.defaultValue!""}</td>

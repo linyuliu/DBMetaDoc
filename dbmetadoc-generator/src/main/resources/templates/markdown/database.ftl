@@ -25,11 +25,11 @@
 
 ### Columns
 
-| # | Column | Type | Raw Type | Length | Nullable | Default | Auto | Generated | Comment |
-|---|--------|------|----------|--------|----------|---------|------|-----------|---------|
+| # | Column | Type | Raw Type | Java Type | Length | Nullable | Default | Auto | Generated | Comment |
+|---|--------|------|----------|-----------|--------|----------|---------|------|-----------|---------|
 <#if table.columns?has_content>
 <#list table.columns as col>
-| ${col_index + 1} | **<#if col.primaryKey>PK </#if>${col.name}** | ${col.type!""} | ${col.rawType!""} | ${col.length!""} | ${col.nullable?string("YES","NO")} | ${col.defaultValue!""} | ${col.autoIncrement?string("YES","NO")} | ${col.generated?string("YES","NO")} | ${col.comment!""} |
+| ${col_index + 1} | **<#if col.primaryKey>PK </#if>${col.name}** | ${col.type!""} | ${col.rawType!""} | ${col.javaType!""} | ${col.length!""} | ${col.nullable?string("YES","NO")} | ${col.defaultValue!""} | ${col.autoIncrement?string("YES","NO")} | ${col.generated?string("YES","NO")} | ${col.comment!""} |
 </#list>
 </#if>
 

@@ -10,7 +10,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>dbmetadoc-frontend</artifactId>
+    <artifactId>dbmetadoc-web</artifactId>
     <packaging>pom</packaging>
     <name>DBMetaDoc 前端模块</name>
     <description>Vue 3 + TypeScript 前端工程，使用本地 Node 构建</description>
