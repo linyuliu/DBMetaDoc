@@ -13,7 +13,7 @@
 
     <artifactId>dbmetadoc-db-core</artifactId>
     <packaging>jar</packaging>
-    <name>DBMetaDoc 数据库核心模块</name>
+    <name>DBMetaDoc DB Core</name>
     <description>数据库元数据抽取 SPI 与公共 JDBC 支持</description>
 
     <dependencies>

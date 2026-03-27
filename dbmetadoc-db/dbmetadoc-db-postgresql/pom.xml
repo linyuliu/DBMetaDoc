@@ -13,7 +13,7 @@
 
     <artifactId>dbmetadoc-db-postgresql</artifactId>
     <packaging>jar</packaging>
-    <name>DBMetaDoc PostgreSQL 数据库模块</name>
+    <name>DBMetaDoc PostgreSQL Database</name>
     <description>PostgreSQL 元数据提取实现</description>
 
     <dependencies>

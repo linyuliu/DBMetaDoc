@@ -13,7 +13,7 @@
 
     <artifactId>dbmetadoc-db-oracle</artifactId>
     <packaging>jar</packaging>
-    <name>DBMetaDoc Oracle 数据库模块</name>
+    <name>DBMetaDoc Oracle Database</name>
     <description>Oracle 元数据提取实现</description>
 
     <dependencies>

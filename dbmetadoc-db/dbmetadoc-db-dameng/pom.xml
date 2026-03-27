@@ -13,7 +13,7 @@
 
     <artifactId>dbmetadoc-db-dameng</artifactId>
     <packaging>jar</packaging>
-    <name>DBMetaDoc 达梦数据库模块</name>
+    <name>DBMetaDoc DB Dameng</name>
     <description>达梦数据库元数据提取实现</description>
 
     <dependencies>

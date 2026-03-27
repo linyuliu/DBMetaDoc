@@ -13,7 +13,7 @@
 
     <artifactId>dbmetadoc-db-kingbase</artifactId>
     <packaging>jar</packaging>
-    <name>DBMetaDoc 金仓数据库模块</name>
+    <name>DBMetaDoc DB Kingbase</name>
     <description>KingbaseES 元数据提取实现，支持兼容模式识别</description>
 
     <dependencies>

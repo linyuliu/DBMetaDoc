@@ -13,7 +13,7 @@
 
     <artifactId>dbmetadoc-db-bundle</artifactId>
     <packaging>jar</packaging>
-    <name>DBMetaDoc 数据库打包模块</name>
+    <name>DBMetaDoc DB Bundle</name>
     <description>供 app 引入的数据库实现聚合包</description>
 
     <dependencies>

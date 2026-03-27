@@ -13,7 +13,7 @@
 
     <artifactId>dbmetadoc-db-modules</artifactId>
     <packaging>pom</packaging>
-    <name>DBMetaDoc 数据库实现聚合模块</name>
+    <name>DBMetaDoc DB Modules</name>
     <description>统一聚合数据库元数据 SPI、驱动实现与打包模块</description>
 
     <modules>
