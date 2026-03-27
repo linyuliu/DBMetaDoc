@@ -16,7 +16,7 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>DBMetaDoc 聚合工程</name>
+    <name>DBMetaDoc Parent</name>
     <description>数据库文档生成工具聚合工程</description>
 
     <modules>
