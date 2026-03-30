@@ -21,6 +21,9 @@ import java.util.Map;
 
 /**
  * PG-like 表结构提取基类。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Slf4j
 public abstract class AbstractPgLikeTableExtractor extends AbstractJdbcMetadataExtractor {
@@ -328,3 +331,5 @@ public abstract class AbstractPgLikeTableExtractor extends AbstractJdbcMetadataE
         return JdbcJavaTypeResolver.resolvePgLike(columnInfo);
     }
 }
+
+

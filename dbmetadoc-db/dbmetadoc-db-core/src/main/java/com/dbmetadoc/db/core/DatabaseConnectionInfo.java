@@ -11,6 +11,9 @@ import java.util.Map;
 
 /**
  * 目标数据库连接参数。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Data
 @Builder
@@ -54,3 +57,5 @@ public class DatabaseConnectionInfo {
         return port == null ? type.getDefaultPort() : port;
     }
 }
+
+

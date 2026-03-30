@@ -22,6 +22,13 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
+
+/**
+ * 全局异常处理器。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {

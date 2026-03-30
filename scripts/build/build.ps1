@@ -38,7 +38,7 @@ Enable-Utf8ConsoleIfNeeded
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
-Push-Location (Join-Path $repoRoot 'dbmetadoc-frontend')
+Push-Location (Join-Path $repoRoot 'dbmetadoc-web')
 try {
     Invoke-NativeCommand -Description 'Frontend build' -Command { npm run build }
 } finally {

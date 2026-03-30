@@ -31,18 +31,20 @@ DBMetaDoc/
 │       ├── html/database.ftl  # HTML 模板
 │       └── markdown/database.ftl  # Markdown 模板
 ├── dbmetadoc-app/             # Spring Boot 应用 + REST API
-└── dbmetadoc-frontend/        # Vue 3 + Vite 前端
+├── dbmetadoc-web/             # Vue 3 + Vite 前端
+├── scripts/build/             # 构建脚本（处理 Windows UTF-8 代码页）
+└── .github/workflows/         # CI/CD 工作流
 ```
 
 ## 技术栈
 
 | 层次 | 技术 |
 |------|------|
-| 后端框架 | Spring Boot 3.2.3 + JDK 17 |
-| 模板引擎 | FreeMarker 2.3.32 |
-| PDF 生成 | Flying Saucer + OpenPDF |
-| Word 生成 | Apache POI 5.2.5 |
-| 数据库驱动 | mysql-connector-j 8.3.0、PostgreSQL 42.7.2 |
+| 后端框架 | Spring Boot 3.2.12 + JDK 17 |
+| 模板引擎 | FreeMarker 2.3.34 |
+| PDF 生成 | Flying Saucer 9.4.0 + OpenPDF |
+| Word 生成 | Apache POI 5.5.1 |
+| 数据库驱动 | mysql-connector-j 8.4.0、PostgreSQL 42.7.10 |
 | 前端框架 | Vue 3 + Vite + TypeScript + Element Plus |
 | 构建工具 | Maven |
 
@@ -73,7 +75,7 @@ build.cmd
 ### 前端开发
 
 ```bash
-cd dbmetadoc-frontend
+cd dbmetadoc-web
 npm install
 npm run dev
 ```
@@ -94,6 +96,12 @@ mvn install:install-file \
 ```
 
 然后将 `dbmetadoc-db/lib/kingbase8-8.6.0.jar` 替换为真实驱动文件。
+
+## CI/CD
+
+- GitHub Actions 已提供 Linux 与 Windows 两条构建链路
+- Linux 任务负责前端构建、后端测试、应用打包和产物上传
+- Windows 任务会通过 `build.cmd` 校验 UTF-8 代码页切换和整包构建流程
 
 ## API 接口
 
@@ -138,3 +146,4 @@ HTML 和 Markdown 模板位于 `dbmetadoc-generator/src/main/resources/templates
 - 数据源管理接口仅使用 `GET` 和 `POST`
 - 保存模板前必须先通过连接测试
 - 前端请求工具已支持 JSON、文件流和 `FormData`
+- JDBC URL 支持前端一键解析并回填主机、端口、数据库和 Schema

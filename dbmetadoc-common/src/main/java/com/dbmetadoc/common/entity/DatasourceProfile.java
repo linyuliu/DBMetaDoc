@@ -9,6 +9,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+/**
+ * 数据源模板实体。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,6 +33,7 @@ public class DatasourceProfile implements Serializable {
     private String databaseName;
     private String schemaName;
     private String username;
+    private String passwordCipher;
     private String driverClass;
     private String remark;
     private Boolean enabled;

@@ -6,6 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * 跨域配置。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Configuration
 @RequiredArgsConstructor
 public class CorsConfig implements WebMvcConfigurer {
@@ -22,3 +28,5 @@ public class CorsConfig implements WebMvcConfigurer {
                 .maxAge(corsProperties.getMaxAge());
     }
 }
+
+

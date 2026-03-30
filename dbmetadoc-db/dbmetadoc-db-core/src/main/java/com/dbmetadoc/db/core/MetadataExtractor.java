@@ -7,6 +7,9 @@ import java.sql.SQLException;
 
 /**
  * 元数据提取器统一接口。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 public interface MetadataExtractor {
 
@@ -29,3 +32,5 @@ public interface MetadataExtractor {
 
     DatabaseInfo extract(Connection connection, DatabaseConnectionInfo connectionInfo) throws SQLException;
 }
+
+

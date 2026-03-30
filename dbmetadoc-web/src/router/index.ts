@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import HomePage from '../views/HomePage.vue'
+import TemplateCenterPage from '../views/TemplateCenterPage.vue'
+import ExportWizardPage from '../views/ExportWizardPage.vue'
 
 const routes: RouteRecordRaw[] = [
-  { path: '/', component: HomePage }
+  { path: '/', component: TemplateCenterPage },
+  { path: '/export', component: ExportWizardPage }
 ]
 
 const router = createRouter({

@@ -12,6 +12,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+
+/**
+ * Fastjson2 序列化配置。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Configuration
 public class Fastjson2Config implements WebMvcConfigurer {
 

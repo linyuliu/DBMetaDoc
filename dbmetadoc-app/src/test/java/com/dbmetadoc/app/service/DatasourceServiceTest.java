@@ -10,13 +10,16 @@ import com.dbmetadoc.app.repository.DatasourceProfileRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.task.TaskExecutor;
+
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,11 +37,20 @@ class DatasourceServiceTest {
     @Mock
     private ConnectionInfoResolver connectionInfoResolver;
 
-    @InjectMocks
-    private DatasourceService datasourceService;
+    @Mock
+    private PasswordCipherService passwordCipherService;
 
     @Test
     void shouldTestConnectionBeforeSavingDatasource() {
+        TaskExecutor directExecutor = Runnable::run;
+        DatasourceService datasourceService = new DatasourceService(
+                datasourceProfileRepository,
+                targetDatabaseService,
+                metadataExtractorRegistry,
+                connectionInfoResolver,
+                passwordCipherService,
+                directExecutor);
+
         DatasourceSaveRequest request = new DatasourceSaveRequest();
         request.setName("test-mysql");
         request.setDbType("MYSQL");
@@ -63,6 +75,7 @@ class DatasourceServiceTest {
                 .password("123456")
                 .resolvedJdbcUrl("jdbc:mysql://127.0.0.1:3306/demo?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true")
                 .build();
+        when(targetDatabaseService.testConnectionAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
         when(connectionInfoResolver.resolve(any())).thenReturn(ResolvedConnectionInfo.builder()
                 .type(DatabaseType.MYSQL)
                 .host("127.0.0.1")
@@ -73,13 +86,16 @@ class DatasourceServiceTest {
                 .resolvedJdbcUrl(connectionInfo.getResolvedJdbcUrl())
                 .build());
 
-        var response = datasourceService.save(request);
+        var response = datasourceService.saveAsync(request).join();
 
-        InOrder inOrder = inOrder(targetDatabaseService, datasourceProfileRepository);
-        inOrder.verify(targetDatabaseService).testConnection(any());
+        InOrder inOrder = inOrder(targetDatabaseService, datasourceProfileRepository, metadataExtractorRegistry);
+        inOrder.verify(targetDatabaseService).testConnectionAsync(any());
+        inOrder.verify(metadataExtractorRegistry).getDriverDescriptor(DatabaseType.MYSQL);
         inOrder.verify(datasourceProfileRepository).save(any());
+        verify(connectionInfoResolver).resolve(any());
         assertEquals(1L, response.getId());
         assertEquals("MYSQL", response.getDbType());
         assertEquals("com.mysql.cj.jdbc.Driver", response.getDriverClass());
+        assertEquals(Boolean.FALSE, response.getPasswordSaved());
     }
 }

@@ -23,6 +23,9 @@ import java.util.Set;
 
 /**
  * 基于 JDBC Metadata 的通用提取器基类。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Slf4j
 public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor {
@@ -319,3 +322,5 @@ public abstract class AbstractJdbcMetadataExtractor implements MetadataExtractor
         };
     }
 }
+
+

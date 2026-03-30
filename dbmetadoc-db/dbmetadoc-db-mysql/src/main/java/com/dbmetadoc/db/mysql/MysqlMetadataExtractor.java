@@ -5,6 +5,9 @@ import com.dbmetadoc.db.core.DatabaseType;
 
 /**
  * MySQL 元数据提取实现。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 public class MysqlMetadataExtractor extends AbstractMysqlLikeTableExtractor {
 
@@ -13,3 +16,5 @@ public class MysqlMetadataExtractor extends AbstractMysqlLikeTableExtractor {
         return DatabaseType.MYSQL;
     }
 }
+
+

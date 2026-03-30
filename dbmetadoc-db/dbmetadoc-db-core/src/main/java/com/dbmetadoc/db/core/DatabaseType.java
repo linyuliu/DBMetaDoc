@@ -8,6 +8,9 @@ import lombok.Getter;
 
 /**
  * 系统内置支持的数据库类型。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Getter
 @AllArgsConstructor
@@ -156,3 +159,5 @@ public enum DatabaseType {
         throw new BusinessException(ResultCode.UNSUPPORTED_DATABASE, "暂不支持的数据库类型: " + code);
     }
 }
+
+

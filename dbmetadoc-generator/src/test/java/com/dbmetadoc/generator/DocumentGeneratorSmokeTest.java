@@ -1,0 +1,181 @@
+package com.dbmetadoc.generator;
+
+import com.dbmetadoc.common.model.ColumnInfo;
+import com.dbmetadoc.common.model.DatabaseInfo;
+import com.dbmetadoc.common.model.ForeignKeyInfo;
+import com.dbmetadoc.common.model.IndexInfo;
+import com.dbmetadoc.common.model.TableInfo;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * 文档生成器冒烟测试。
+ *
+ * @author mumu
+ * @date 2026-03-28
+ */
+class DocumentGeneratorSmokeTest {
+
+    private final DataFormatter dataFormatter = new DataFormatter();
+
+    @Test
+    void shouldGenerateAllFormatsWithCoreColumnsAndExtendedSection() throws Exception {
+        DocumentRenderContext renderContext = buildRenderContext();
+
+        String html = new String(DocumentGeneratorFactory.create("HTML").generate(renderContext), StandardCharsets.UTF_8);
+        assertTrue(html.contains("核心字段清单"));
+        assertTrue(html.contains("字段扩展补充"));
+        assertTrue(html.contains("数据库结构文档"));
+        assertFalse(html.contains(">字段列表<"));
+
+        String markdown = new String(DocumentGeneratorFactory.create("MARKDOWN").generate(renderContext), StandardCharsets.UTF_8);
+        assertTrue(markdown.contains("核心字段清单"));
+        assertTrue(markdown.contains("字段扩展补充"));
+        assertTrue(markdown.contains("| 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
+        assertFalse(markdown.contains("| 序号 | 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
+
+        byte[] pdf = DocumentGeneratorFactory.create("PDF").generate(renderContext);
+        assertTrue(pdf.length > 4);
+        assertEquals("%PDF", new String(pdf, 0, 4, StandardCharsets.US_ASCII));
+
+        byte[] word = DocumentGeneratorFactory.create("WORD").generate(renderContext);
+        try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(word))) {
+            String xml = document.getDocument().xmlText();
+            assertTrue(xml.contains("核心字段清单"));
+            assertTrue(xml.contains("字段扩展补充"));
+            assertTrue(xml.contains("数据库结构文档"));
+            assertFalse(xml.contains("字段列表"));
+        }
+
+        byte[] excel = DocumentGeneratorFactory.create("EXCEL").generate(renderContext);
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excel))) {
+            assertEquals("库概览", workbook.getSheetName(0));
+            assertTrue(workbook.getSheetName(1).startsWith("01_"));
+            assertTrue(sheetContains(workbook, "核心字段清单"));
+            assertTrue(sheetContains(workbook, "字段扩展补充"));
+        }
+    }
+
+    private boolean sheetContains(XSSFWorkbook workbook, String expectedText) {
+        for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+            var sheet = workbook.getSheetAt(sheetIndex);
+            for (var row : sheet) {
+                for (var cell : row) {
+                    if (expectedText.equals(dataFormatter.formatCellValue(cell))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private DocumentRenderContext buildRenderContext() {
+        ColumnInfo idColumn = ColumnInfo.builder()
+                .name("id")
+                .type("BIGINT")
+                .rawType("bigint")
+                .javaType("Long")
+                .primaryKey(true)
+                .nullable(false)
+                .defaultValue("0")
+                .comment("主键")
+                .autoIncrement(true)
+                .generated(false)
+                .length(20)
+                .ordinalPosition(1)
+                .build();
+
+        ColumnInfo nameColumn = ColumnInfo.builder()
+                .name("order_name")
+                .type("VARCHAR")
+                .rawType("varchar(128)")
+                .javaType("String")
+                .primaryKey(false)
+                .nullable(false)
+                .defaultValue("")
+                .comment("订单名称")
+                .autoIncrement(false)
+                .generated(false)
+                .length(128)
+                .ordinalPosition(2)
+                .build();
+
+        TableInfo tableInfo = TableInfo.builder()
+                .name("order_main")
+                .comment("订单主表")
+                .schema("biz")
+                .primaryKey("id")
+                .tableType("BASE TABLE")
+                .engine("InnoDB")
+                .charset("utf8mb4")
+                .collation("utf8mb4_general_ci")
+                .rowFormat("Dynamic")
+                .columns(List.of(idColumn, nameColumn))
+                .indexes(List.of(IndexInfo.builder()
+                        .name("idx_order_name")
+                        .columnNames(List.of("order_name"))
+                        .unique(false)
+                        .type("BTREE")
+                        .build()))
+                .foreignKeys(List.of(ForeignKeyInfo.builder()
+                        .name("fk_order_user")
+                        .columnName("user_id")
+                        .referencedTable("sys_user")
+                        .referencedColumn("id")
+                        .build()))
+                .build();
+
+        DatabaseInfo databaseInfo = DatabaseInfo.builder()
+                .name("dbmeta")
+                .type("MYSQL")
+                .version("8.4")
+                .databaseName("dbmeta")
+                .schemaName("biz")
+                .catalogName("dbmeta")
+                .charset("utf8mb4")
+                .collation("utf8mb4_general_ci")
+                .tables(List.of(tableInfo))
+                .build();
+
+        Set<String> visibleSections = new LinkedHashSet<>(List.of(
+                "DATABASE_OVERVIEW",
+                "TABLE_OVERVIEW",
+                "COLUMN_BASIC",
+                "COLUMN_EXTENDED",
+                "INDEXES",
+                "FOREIGN_KEYS"
+        ));
+
+        FontRenderProfile fontProfile = FontRenderProfile.builder()
+                .code("modern-cn")
+                .label("现代中文")
+                .titleFont("Microsoft YaHei")
+                .bodyFont("DengXian")
+                .monoFont("Cascadia Mono")
+                .titleFontCss("\"Microsoft YaHei\", \"微软雅黑\", sans-serif")
+                .bodyFontCss("\"DengXian\", \"等线\", sans-serif")
+                .monoFontCss("\"Cascadia Mono\", monospace")
+                .pdfFontFiles(List.of())
+                .build();
+
+        return DocumentRenderContext.builder()
+                .title("订单数据库结构文档")
+                .database(databaseInfo)
+                .visibleSections(visibleSections)
+                .fontProfile(fontProfile)
+                .build();
+    }
+}

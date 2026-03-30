@@ -7,6 +7,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+/**
+ * 数据源详情响应对象。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,6 +33,7 @@ public class DatasourceDetailResponse {
     private String testSql;
     private String remark;
     private Boolean enabled;
+    private Boolean passwordSaved;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -4,6 +4,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+
+/**
+ * 应用启动入口。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class Application {

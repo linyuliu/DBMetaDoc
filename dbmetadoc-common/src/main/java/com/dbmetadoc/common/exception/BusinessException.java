@@ -6,6 +6,13 @@ import lombok.Getter;
 
 import com.dbmetadoc.common.enums.ResultCode;
 
+
+/**
+ * 业务异常类型。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Getter
 public class BusinessException extends RuntimeException {
 

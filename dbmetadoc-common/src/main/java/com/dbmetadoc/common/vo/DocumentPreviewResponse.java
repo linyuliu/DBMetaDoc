@@ -5,6 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+/**
+ * 文档预览响应对象。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -9,6 +9,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+/**
+ * 元数据缓存记录对象。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Data
 @Builder
 @NoArgsConstructor

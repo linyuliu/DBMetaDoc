@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 /**
  * 驱动展示描述。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Data
 @Builder
@@ -40,3 +43,5 @@ public class DriverDescriptor {
 
     private String metadataStrategy;
 }
+
+

@@ -2,7 +2,6 @@ package com.dbmetadoc.common.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
@@ -10,13 +9,15 @@ import lombok.Data;
  * <p>
  * 结构化字段优先于 jdbcUrl；当结构化字段缺失时，服务层会尝试从 jdbcUrl 中解析并补齐。
  * </p>
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Data
 public class ConnectionRequest {
 
     private Long datasourceId;
 
-    @NotBlank(message = "数据库类型不能为空")
     private String dbType;
 
     /**
@@ -34,13 +35,15 @@ public class ConnectionRequest {
 
     private String schema;
 
-    @NotBlank(message = "用户名不能为空")
     private String username;
 
-    @NotBlank(message = "密码不能为空")
     private String password;
 
     private Boolean useCache;
 
     private Boolean forceRefresh;
+
+    private Boolean useStoredPassword;
 }
+
+

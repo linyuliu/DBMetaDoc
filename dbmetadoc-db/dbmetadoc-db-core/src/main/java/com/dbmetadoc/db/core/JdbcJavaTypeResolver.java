@@ -13,6 +13,9 @@ import java.util.Locale;
  * 2. 国产数据库或未来 OLAP 场景中识别不了的类型统一回退为 String；
  * 3. 允许各数据库提取器在公共映射之上继续覆盖。
  * </p>
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 public final class JdbcJavaTypeResolver {
 
@@ -319,9 +322,11 @@ public final class JdbcJavaTypeResolver {
         }
         String content = StrUtil.subBetween(rawType, "(", ")");
         if (StrUtil.isBlank(content)) {
-            return columnInfo == null ? null : firstNonNull(columnInfo.getLength(), columnInfo.getPrecision());
+            return firstNonNull(columnInfo.getLength(), columnInfo.getPrecision());
         }
         String first = StrUtil.splitTrim(content, ',').stream().findFirst().orElse(null);
         return StrUtil.isNumeric(first) ? Integer.parseInt(first) : firstNonNull(columnInfo.getLength(), columnInfo.getPrecision());
     }
 }
+
+

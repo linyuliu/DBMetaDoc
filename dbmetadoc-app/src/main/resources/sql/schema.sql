@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS md_datasource_profile (
     database_name VARCHAR(128) NOT NULL COMMENT '数据库名或服务名',
     schema_name VARCHAR(128) DEFAULT NULL COMMENT 'Schema名称',
     username VARCHAR(128) NOT NULL COMMENT '连接用户名',
+    password_cipher VARCHAR(1024) DEFAULT NULL COMMENT '加密后的连接密码',
     driver_class VARCHAR(255) DEFAULT NULL COMMENT 'JDBC驱动类名',
     remark VARCHAR(512) DEFAULT NULL COMMENT '备注',
     enabled TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否启用',

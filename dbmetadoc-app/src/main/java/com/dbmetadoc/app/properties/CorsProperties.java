@@ -6,6 +6,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * 跨域配置属性。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Data
 @ConfigurationProperties(prefix = "dbmetadoc.cors")
 public class CorsProperties {

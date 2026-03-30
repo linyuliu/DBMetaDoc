@@ -9,6 +9,9 @@ import java.sql.SQLException;
 
 /**
  * 目标数据库连接工厂。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Slf4j
 public final class TargetConnectionFactory {
@@ -19,7 +22,8 @@ public final class TargetConnectionFactory {
     /**
      * 基于 HikariCP 创建目标数据库数据源。
      */
-    public static HikariDataSource createDataSource(DatabaseConnectionInfo connectionInfo) throws SQLException {
+    public static HikariDataSource createDataSource(DatabaseConnectionInfo connectionInfo,
+                                                    TargetConnectionPoolSettings poolSettings) throws SQLException {
         try {
             Class.forName(connectionInfo.getType().getDriverClass());
         } catch (ClassNotFoundException e) {
@@ -32,12 +36,12 @@ public final class TargetConnectionFactory {
         config.setJdbcUrl(jdbcUrl);
         config.setUsername(connectionInfo.getUsername());
         config.setPassword(connectionInfo.getPassword());
-        config.setMinimumIdle(0);
-        config.setMaximumPoolSize(2);
-        config.setConnectionTimeout(10_000);
-        config.setValidationTimeout(5_000);
-        config.setIdleTimeout(30_000);
-        config.setMaxLifetime(120_000);
+        config.setMinimumIdle(poolSettings.getMinimumIdle());
+        config.setMaximumPoolSize(poolSettings.getMaximumPoolSize());
+        config.setConnectionTimeout(poolSettings.getConnectionTimeoutMs());
+        config.setValidationTimeout(poolSettings.getValidationTimeoutMs());
+        config.setIdleTimeout(poolSettings.getIdleTimeoutMs());
+        config.setMaxLifetime(poolSettings.getMaxLifetimeMs());
         config.setAutoCommit(true);
         config.setInitializationFailTimeout(1);
         log.info("创建目标库连接池，数据库类型：{}，主机：{}，端口：{}，数据库：{}，JDBC URL：{}",
@@ -67,3 +71,5 @@ public final class TargetConnectionFactory {
                 System.nanoTime());
     }
 }
+
+

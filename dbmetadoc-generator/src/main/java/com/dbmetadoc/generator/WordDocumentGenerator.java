@@ -1,23 +1,24 @@
 package com.dbmetadoc.generator;
 
-import com.dbmetadoc.common.model.ColumnInfo;
-import com.dbmetadoc.common.model.DatabaseInfo;
-import com.dbmetadoc.common.model.TableInfo;
-import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
-import org.apache.poi.xwpf.usermodel.XWPFTable;
-import org.apache.poi.xwpf.usermodel.XWPFTableCell;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
+import com.deepoove.poi.XWPFTemplate;
+import com.deepoove.poi.config.Configure;
+import com.deepoove.poi.plugin.table.LoopRowTableRenderPolicy;
+import com.dbmetadoc.common.enums.ResultCode;
+import com.dbmetadoc.common.exception.BusinessException;
+import com.dbmetadoc.generator.model.DocumentTemplateModel;
 
 import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
-import java.util.List;
+import java.io.InputStream;
 
+/**
+ * Word 文档生成器。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 public class WordDocumentGenerator implements DocumentGenerator {
+
+    private static final String TEMPLATE_PATH = "/templates/word/database-template.docx";
 
     @Override
     public String getFormat() {
@@ -25,119 +26,30 @@ public class WordDocumentGenerator implements DocumentGenerator {
     }
 
     @Override
-    public byte[] generate(DatabaseInfo databaseInfo, String title) throws Exception {
-        try (XWPFDocument document = new XWPFDocument()) {
-            // Title
-            XWPFParagraph titlePara = document.createParagraph();
-            titlePara.setAlignment(ParagraphAlignment.CENTER);
-            XWPFRun titleRun = titlePara.createRun();
-            titleRun.setText(title != null ? title : "Database Documentation");
-            titleRun.setBold(true);
-            titleRun.setFontSize(20);
+    public byte[] generate(DocumentRenderContext renderContext) throws Exception {
+        DocumentTemplateModel view = DocumentTemplateModelFactory.create(renderContext);
+        Configure configure = Configure.builder()
+                .bind("tableOverviewRows", new LoopRowTableRenderPolicy())
+                .bind("columns", new LoopRowTableRenderPolicy())
+                .bind("extendedColumns", new LoopRowTableRenderPolicy())
+                .bind("indexes", new LoopRowTableRenderPolicy())
+                .bind("foreignKeys", new LoopRowTableRenderPolicy())
+                .build();
 
-            // Database info
-            XWPFParagraph infoPara = document.createParagraph();
-            XWPFRun infoRun = infoPara.createRun();
-            infoRun.setText("Database: " + (databaseInfo.getDatabaseName() != null ? databaseInfo.getDatabaseName() : databaseInfo.getName())
-                    + "  Type: " + databaseInfo.getType()
-                    + (databaseInfo.getSchemaName() != null ? "  Schema: " + databaseInfo.getSchemaName() : "")
-                    + (databaseInfo.getCharset() != null ? "  Charset: " + databaseInfo.getCharset() : "")
-                    + (databaseInfo.getCollation() != null ? "  Collation: " + databaseInfo.getCollation() : "")
-                    + (databaseInfo.getVersion() != null ? "  Version: " + databaseInfo.getVersion() : ""));
-
-            if (databaseInfo.getTables() != null) {
-                int tableIndex = 1;
-                for (TableInfo table : databaseInfo.getTables()) {
-                    // Table heading
-                    XWPFParagraph heading = document.createParagraph();
-                    heading.setStyle("Heading1");
-                    XWPFRun headingRun = heading.createRun();
-                    String headingText = tableIndex + ". " + table.getName();
-                    if (table.getComment() != null && !table.getComment().isEmpty()) {
-                        headingText += " - " + table.getComment();
-                    }
-                    headingRun.setText(headingText);
-
-                    XWPFParagraph tableMeta = document.createParagraph();
-                    tableMeta.createRun().setText("Schema: " + safe(table.getSchema())
-                            + "  Engine: " + safe(table.getEngine())
-                            + "  Charset: " + safe(table.getCharset())
-                            + "  Collation: " + safe(table.getCollation())
-                            + "  RowFormat: " + safe(table.getRowFormat()));
-
-                    // Columns heading
-                    XWPFParagraph colHeading = document.createParagraph();
-                    colHeading.setStyle("Heading2");
-                    colHeading.createRun().setText("Columns");
-
-                    // Columns table
-                    if (table.getColumns() != null && !table.getColumns().isEmpty()) {
-                        XWPFTable colTable = document.createTable();
-                        setTableWidth(colTable);
-
-                        // Header row
-                        XWPFTableRow headerRow = colTable.getRow(0);
-                        setCell(headerRow, 0, "#");
-                        addCell(headerRow, "Column Name");
-                        addCell(headerRow, "Type");
-                        addCell(headerRow, "Raw Type");
-                        addCell(headerRow, "Java Type");
-                        addCell(headerRow, "Length");
-                        addCell(headerRow, "Nullable");
-                        addCell(headerRow, "Default");
-                        addCell(headerRow, "Auto");
-                        addCell(headerRow, "Generated");
-                        addCell(headerRow, "Comment");
-                        addCell(headerRow, "PK");
-
-                        int colIdx = 1;
-                        for (ColumnInfo col : table.getColumns()) {
-                            XWPFTableRow row = colTable.createRow();
-                            setCell(row, 0, String.valueOf(colIdx++));
-                            setCell(row, 1, col.getName());
-                            setCell(row, 2, col.getType() != null ? col.getType() : "");
-                            setCell(row, 3, col.getRawType() != null ? col.getRawType() : "");
-                            setCell(row, 4, col.getJavaType() != null ? col.getJavaType() : "");
-                            setCell(row, 5, col.getLength() != null ? String.valueOf(col.getLength()) : "");
-                            setCell(row, 6, Boolean.TRUE.equals(col.getNullable()) ? "YES" : "NO");
-                            setCell(row, 7, col.getDefaultValue() != null ? col.getDefaultValue() : "");
-                            setCell(row, 8, Boolean.TRUE.equals(col.getAutoIncrement()) ? "YES" : "NO");
-                            setCell(row, 9, Boolean.TRUE.equals(col.getGenerated()) ? "YES" : "NO");
-                            setCell(row, 10, col.getComment() != null ? col.getComment() : "");
-                            setCell(row, 11, Boolean.TRUE.equals(col.getPrimaryKey()) ? "YES" : "");
-                        }
-                    }
-
-                    tableIndex++;
-                }
-            }
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            document.write(out);
-            return out.toByteArray();
+        InputStream resourceStream = WordDocumentGenerator.class.getResourceAsStream(TEMPLATE_PATH);
+        if (resourceStream == null) {
+            throw new BusinessException(ResultCode.DOCUMENT_GENERATE_FAILED, "Word 模板不存在: " + TEMPLATE_PATH);
         }
-    }
 
-    private void setTableWidth(XWPFTable table) {
-        CTTblWidth tblWidth = table.getCTTbl().getTblPr().addNewTblW();
-        tblWidth.setType(STTblWidth.PCT);
-        tblWidth.setW(BigInteger.valueOf(5000));
-    }
-
-    private void setCell(XWPFTableRow row, int cellIndex, String text) {
-        XWPFTableCell cell = row.getCell(cellIndex);
-        if (cell == null) {
-            cell = row.addNewTableCell();
+        try (InputStream templateStream = resourceStream;
+             XWPFTemplate template = XWPFTemplate.compile(templateStream, configure).render(view);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            template.write(outputStream);
+            return outputStream.toByteArray();
+        } catch (BusinessException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new BusinessException(ResultCode.DOCUMENT_GENERATE_FAILED, "Word 文档生成失败: " + ex.getMessage(), ex);
         }
-        cell.setText(text != null ? text : "");
-    }
-
-    private void addCell(XWPFTableRow row, String text) {
-        XWPFTableCell cell = row.addNewTableCell();
-        cell.setText(text != null ? text : "");
-    }
-
-    private String safe(String value) {
-        return value == null ? "" : value;
     }
 }

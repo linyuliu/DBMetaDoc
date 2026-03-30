@@ -11,6 +11,9 @@ import java.util.List;
 
 /**
  * 数据库实现模块装配入口。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 public final class MetadataModules {
 
@@ -29,3 +32,5 @@ public final class MetadataModules {
                 new DamengMetadataExtractor()));
     }
 }
+
+

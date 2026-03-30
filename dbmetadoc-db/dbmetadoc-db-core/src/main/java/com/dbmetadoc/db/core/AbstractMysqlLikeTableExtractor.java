@@ -22,6 +22,9 @@ import java.util.regex.Pattern;
 
 /**
  * MySQL-like 表结构提取基类。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Slf4j
 public abstract class AbstractMysqlLikeTableExtractor extends AbstractJdbcMetadataExtractor {
@@ -429,3 +432,5 @@ public abstract class AbstractMysqlLikeTableExtractor extends AbstractJdbcMetada
         }
     }
 }
+
+

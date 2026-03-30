@@ -10,6 +10,9 @@ import java.util.Map;
 
 /**
  * JDBC URL 解析结果。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Data
 @Builder
@@ -32,3 +35,5 @@ public class JdbcUrlParts {
     @Builder.Default
     private Map<String, String> parameters = new LinkedHashMap<>();
 }
+
+

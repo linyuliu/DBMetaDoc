@@ -12,6 +12,13 @@ import lombok.NoArgsConstructor;
 
 import com.dbmetadoc.common.enums.ResultCode;
 
+
+/**
+ * 统一响应包装对象。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Data
 @Builder
 @NoArgsConstructor

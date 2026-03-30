@@ -35,7 +35,7 @@ class GlobalExceptionHandlerTest {
     void shouldWrapValidationException() throws Exception {
         mockMvc.perform(post("/test/validate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"format\":\"HTML\"}"))
+                        .content("{\"format\":\"\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ResultCode.VALIDATION_FAILED.getCode()));
     }

@@ -33,6 +33,9 @@ import java.util.Objects;
  * 尤其 MySQL 模式下，SHOW 语句、字段语义和 JDBC metadata 表现都与原生 MySQL 不完全一致，
  * 所以这里按模式分别组织提取路径，避免直接套用通用 MysqlLike 提取器。
  * </p>
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Slf4j
 public class KingbaseMetadataExtractor extends AbstractPgLikeTableExtractor {
@@ -469,3 +472,5 @@ public class KingbaseMetadataExtractor extends AbstractPgLikeTableExtractor {
         }
     }
 }
+
+

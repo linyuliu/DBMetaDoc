@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 /**
  * 元数据提取器注册表。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 public class MetadataExtractorRegistry {
 
@@ -51,3 +54,5 @@ public class MetadataExtractorRegistry {
                 .collect(Collectors.toList());
     }
 }
+
+

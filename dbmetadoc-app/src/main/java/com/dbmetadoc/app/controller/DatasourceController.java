@@ -18,7 +18,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+
+/**
+ * 数据源管理控制器。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -38,14 +46,13 @@ public class DatasourceController {
     }
 
     @PostMapping("/test")
-    public R<Void> test(@Valid @RequestBody DatasourceTestRequest request) {
-        datasourceService.test(request);
-        return R.ok();
+    public CompletableFuture<R<Void>> test(@Valid @RequestBody DatasourceTestRequest request) {
+        return datasourceService.testAsync(request).thenApply(ignored -> R.ok());
     }
 
     @PostMapping("/save")
-    public R<DatasourceDetailResponse> save(@Valid @RequestBody DatasourceSaveRequest request) {
-        return R.ok(datasourceService.save(request));
+    public CompletableFuture<R<DatasourceDetailResponse>> save(@Valid @RequestBody DatasourceSaveRequest request) {
+        return datasourceService.saveAsync(request).thenApply(R::ok);
     }
 
     @PostMapping("/remove")

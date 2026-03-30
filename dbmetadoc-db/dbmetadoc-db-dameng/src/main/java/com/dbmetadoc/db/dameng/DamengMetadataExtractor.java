@@ -6,6 +6,9 @@ import com.dbmetadoc.db.core.DatabaseType;
 
 /**
  * 达梦元数据提取实现。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 public class DamengMetadataExtractor extends AbstractOracleLikeTableExtractor {
 
@@ -45,3 +48,5 @@ public class DamengMetadataExtractor extends AbstractOracleLikeTableExtractor {
                 """;
     }
 }
+
+

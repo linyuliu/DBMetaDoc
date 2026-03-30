@@ -1,38 +1,59 @@
 package com.dbmetadoc.app.controller;
 
+import com.dbmetadoc.app.service.DocumentOptionService;
 import com.dbmetadoc.common.dto.DocumentRequest;
+import com.dbmetadoc.common.vo.DocumentOptionsResponse;
 import com.dbmetadoc.common.vo.DocumentPreviewResponse;
 import com.dbmetadoc.app.service.DocumentService;
 import com.dbmetadoc.app.service.GeneratedDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class DocumentControllerTest {
 
     private final DocumentService documentService = mock(DocumentService.class);
+    private final DocumentOptionService documentOptionService = mock(DocumentOptionService.class);
 
     private final MockMvc mockMvc = MockMvcBuilders
-            .standaloneSetup(new DocumentController(documentService))
+            .standaloneSetup(new DocumentController(documentService, documentOptionService))
             .setControllerAdvice(new com.dbmetadoc.app.exception.GlobalExceptionHandler())
             .build();
 
     @Test
-    void shouldReturnWrappedPreviewResponse() throws Exception {
-        when(documentService.preview(any(DocumentRequest.class)))
-                .thenReturn(DocumentPreviewResponse.builder().title("demo").html("<h1>demo</h1>").build());
+    void shouldReturnDocumentOptions() throws Exception {
+        when(documentOptionService.loadOptions()).thenReturn(DocumentOptionsResponse.builder()
+                .defaultFontPreset("modern-cn")
+                .build());
 
-        mockMvc.perform(post("/api/document/preview")
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/document/options"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.defaultFontPreset").value("modern-cn"));
+    }
+
+    @Test
+    void shouldReturnWrappedPreviewResponse() throws Exception {
+        when(documentService.previewAsync(any(DocumentRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(
+                        DocumentPreviewResponse.builder().title("demo").html("<h1>demo</h1>").build()));
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/document/preview")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -45,6 +66,10 @@ class DocumentControllerTest {
                                   "format":"HTML"
                                 }
                                 """))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.title").value("demo"));
@@ -52,14 +77,14 @@ class DocumentControllerTest {
 
     @Test
     void shouldReturnFileStreamOnExport() throws Exception {
-        when(documentService.export(any(DocumentRequest.class)))
-                .thenReturn(GeneratedDocument.builder()
+        when(documentService.exportAsync(any(DocumentRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(GeneratedDocument.builder()
                         .fileName("database-doc.html")
                         .contentType("text/html;charset=UTF-8")
                         .content("<h1>demo</h1>".getBytes())
-                        .build());
+                        .build()));
 
-        mockMvc.perform(post("/api/document/export")
+        MvcResult mvcResult = mockMvc.perform(post("/api/document/export")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -72,6 +97,10 @@ class DocumentControllerTest {
                                   "format":"HTML"
                                 }
                                 """))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"database-doc.html\""))
                 .andExpect(content().contentType("text/html;charset=UTF-8"))

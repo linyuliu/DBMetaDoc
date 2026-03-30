@@ -3,6 +3,13 @@ package com.dbmetadoc.common.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+
+/**
+ * 统一结果码枚举。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Getter
 @AllArgsConstructor
 public enum ResultCode {

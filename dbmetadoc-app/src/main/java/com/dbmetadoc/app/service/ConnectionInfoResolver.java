@@ -1,5 +1,6 @@
 package com.dbmetadoc.app.service;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.dbmetadoc.common.dto.ConnectionRequest;
 import com.dbmetadoc.common.enums.ResultCode;
@@ -21,6 +22,9 @@ import java.util.regex.Pattern;
 
 /**
  * 连接参数归一化服务。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Slf4j
 @Component
@@ -37,7 +41,7 @@ public class ConnectionInfoResolver {
         JdbcUrlParts jdbcUrlParts = parseJdbcUrl(databaseType, request.getJdbcUrl());
 
         String host = pickText(request.getHost(), jdbcUrlParts.getHost());
-        Integer port = request.getPort() != null ? request.getPort() : jdbcUrlParts.getPort();
+        Integer port = ObjectUtil.defaultIfNull(request.getPort(), jdbcUrlParts.getPort());
         String database = pickText(request.getDatabase(), jdbcUrlParts.getDatabase());
         String schema = pickText(request.getSchema(), jdbcUrlParts.getSchema());
 
@@ -53,7 +57,7 @@ public class ConnectionInfoResolver {
                     jdbcUrlParts.getParameters().get("currentschema"),
                     jdbcUrlParts.getParameters().get("current_schema"));
         } else if (databaseType == DatabaseType.ORACLE || databaseType == DatabaseType.DAMENG) {
-            schema = pickText(schema, request.getUsername() == null ? null : request.getUsername().toUpperCase());
+            schema = pickText(schema, StrUtil.isBlank(request.getUsername()) ? null : request.getUsername().toUpperCase());
         }
 
         validateResolvedFields(databaseType, host, database);
@@ -74,6 +78,7 @@ public class ConnectionInfoResolver {
                 .jdbcParameters(new LinkedHashMap<>(jdbcUrlParts.getParameters()))
                 .build();
         connectionInfo.setResolvedJdbcUrl(databaseType.buildJdbcUrl(connectionInfo));
+        validateResolvedFields(connectionInfo);
 
         ResolvedConnectionInfo resolved = ResolvedConnectionInfo.builder()
                 .type(databaseType)
@@ -226,6 +231,15 @@ public class ConnectionInfoResolver {
         }
     }
 
+    private void validateResolvedFields(DatabaseConnectionInfo connectionInfo) {
+        if (StrUtil.isBlank(connectionInfo.getUsername())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "用户名不能为空");
+        }
+        if (StrUtil.isBlank(connectionInfo.getPassword())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "密码不能为空，若使用模板密码请勾选“使用已保存密码”");
+        }
+    }
+
     private String pickText(String... values) {
         for (String value : values) {
             if (StrUtil.isNotBlank(value)) {
@@ -235,3 +249,5 @@ public class ConnectionInfoResolver {
         return null;
     }
 }
+
+

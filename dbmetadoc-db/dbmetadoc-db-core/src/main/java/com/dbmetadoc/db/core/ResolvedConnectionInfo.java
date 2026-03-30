@@ -10,6 +10,9 @@ import java.util.Map;
 
 /**
  * 经过 JDBC URL 解析和字段优先级合并后的连接参数。
+ *
+ * @author mumu
+ * @date 2026-03-30
  */
 @Data
 @Builder
@@ -67,3 +70,5 @@ public class ResolvedConnectionInfo {
                 .build();
     }
 }
+
+

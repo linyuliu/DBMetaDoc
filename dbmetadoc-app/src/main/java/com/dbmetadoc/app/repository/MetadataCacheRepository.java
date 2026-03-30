@@ -11,6 +11,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+
+/**
+ * 元数据缓存仓储。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 @Repository
 @RequiredArgsConstructor
 public class MetadataCacheRepository {

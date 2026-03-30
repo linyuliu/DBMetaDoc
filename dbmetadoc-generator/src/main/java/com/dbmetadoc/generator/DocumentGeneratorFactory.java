@@ -1,25 +1,27 @@
 package com.dbmetadoc.generator;
 
+import cn.hutool.core.util.StrUtil;
+
+
+/**
+ * 文档生成器工厂。
+ *
+ * @author mumu
+ * @date 2026-03-30
+ */
 public class DocumentGeneratorFactory {
 
     public static DocumentGenerator create(String format) {
-        if (format == null) {
-            throw new IllegalArgumentException("Format must not be null");
+        if (StrUtil.isBlank(format)) {
+            throw new IllegalArgumentException("Format must not be blank");
         }
-        switch (format.toUpperCase()) {
-            case "HTML":
-                return new HtmlDocumentGenerator();
-            case "MARKDOWN":
-            case "MD":
-                return new MarkdownDocumentGenerator();
-            case "PDF":
-                return new PdfDocumentGenerator();
-            case "WORD":
-            case "DOC":
-            case "DOCX":
-                return new WordDocumentGenerator();
-            default:
-                throw new IllegalArgumentException("Unsupported format: " + format);
-        }
+        return switch (format.toUpperCase()) {
+            case "HTML" -> new HtmlDocumentGenerator();
+            case "MARKDOWN", "MD" -> new MarkdownDocumentGenerator();
+            case "PDF" -> new PdfDocumentGenerator();
+            case "WORD", "DOC", "DOCX" -> new WordDocumentGenerator();
+            case "EXCEL", "XLS", "XLSX" -> new ExcelDocumentGenerator();
+            default -> throw new IllegalArgumentException("Unsupported format: " + format);
+        };
     }
 }
