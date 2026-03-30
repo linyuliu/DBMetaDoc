@@ -1,0 +1,8 @@
+# 默认忽略全部，只放行运行镜像真正需要的文件，减少构建上下文。
+**
+
+!Dockerfile
+!.dockerignore
+!dbmetadoc-app/
+!dbmetadoc-app/target/
+!dbmetadoc-app/target/dbmetadoc-app-*.jar
