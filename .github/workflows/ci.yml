@@ -3,9 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - master
-      - main
-      - 'codex/**'
+      - release
   pull_request:
 
 jobs:
@@ -27,12 +25,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: dbmetadoc-web/package-lock.json
-
-      - name: Install Kingbase stub driver
-        run: mvn -q install:install-file "-Dfile=dbmetadoc-db/lib/kingbase8-8.6.0.jar" -DgroupId=cn.com.kingbase -DartifactId=kingbase8 -Dversion=8.6.1 -Dpackaging=jar
 
       - name: Install frontend dependencies
         working-directory: dbmetadoc-web
@@ -47,45 +42,3 @@ jobs:
 
       - name: Package application
         run: mvn -q -pl dbmetadoc-app -am clean package -DskipTests
-
-      - name: Upload application artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dbmetadoc-app-jar
-          path: dbmetadoc-app/target/dbmetadoc-app-*.jar
-          if-no-files-found: error
-
-  windows-build:
-    name: Windows Build
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: maven
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: dbmetadoc-web/package-lock.json
-
-      - name: Install Kingbase stub driver
-        shell: pwsh
-        run: mvn --% -q install:install-file -Dfile=dbmetadoc-db/lib/kingbase8-8.6.0.jar -DgroupId=cn.com.kingbase -DartifactId=kingbase8 -Dversion=8.6.1 -Dpackaging=jar
-
-      - name: Install frontend dependencies
-        working-directory: dbmetadoc-web
-        shell: pwsh
-        run: npm ci
-
-      - name: Build with Windows wrapper
-        shell: cmd
-        run: build.cmd -SkipTests
