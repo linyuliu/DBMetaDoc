@@ -137,7 +137,7 @@
           <div class="panel-head">
             <div>
               <h2>第二步：字段组</h2>
-              <p>默认按 A4 打印版式导出；列扩展会以下方补充区展示，不会扩宽主字段表。</p>
+              <p>默认只导出字段、索引和外键；库概览、表概览先不默认展示，列扩展以下方补充区呈现。</p>
             </div>
             <div class="inline-actions">
               <el-button text @click="handleResetSections">恢复默认</el-button>
@@ -379,7 +379,7 @@ const {
 
 .preview-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(360px, 0.75fr);
+  grid-template-columns: minmax(0, 1.85fr) minmax(320px, 0.55fr);
   gap: 18px;
 }
 
@@ -489,9 +489,10 @@ const {
 .preview-panel {
   min-height: 72vh;
   overflow: auto;
-  padding: 8px;
+  padding: 14px;
   border-radius: 18px;
-  background: #fff;
+  background: #edf2f7;
+  border: 1px solid rgba(22, 61, 80, 0.08);
 }
 
 .export-form {

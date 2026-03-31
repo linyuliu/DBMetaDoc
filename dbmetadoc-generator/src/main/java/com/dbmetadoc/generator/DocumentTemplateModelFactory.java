@@ -27,8 +27,6 @@ import java.util.List;
 public final class DocumentTemplateModelFactory {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String DEFAULT_SUBTITLE = "数据库结构文档";
-
     private DocumentTemplateModelFactory() {
     }
 
@@ -36,18 +34,20 @@ public final class DocumentTemplateModelFactory {
         DatabaseInfo databaseInfo = renderContext.getDatabase();
         DocumentTheme theme = DocumentThemeFactory.create(renderContext.getFontProfile());
         List<DocumentTableModel> tables = buildTables(databaseInfo, renderContext);
+        String databaseName = GeneratorSupport.defaultText(databaseInfo.getDatabaseName(), databaseInfo.getName());
+        int tableCount = CollUtil.size(tables);
         return DocumentTemplateModel.builder()
                 .title(GeneratorSupport.defaultText(renderContext.getTitle(), "数据库文档"))
-                .subtitle(DEFAULT_SUBTITLE)
+                .subtitle(String.format("%s · 共 %d 张表", databaseName, tableCount))
                 .generatedAt(DATE_TIME_FORMATTER.format(LocalDateTime.now()))
-                .databaseName(GeneratorSupport.defaultText(databaseInfo.getDatabaseName(), databaseInfo.getName()))
+                .databaseName(databaseName)
                 .type(GeneratorSupport.safeText(databaseInfo.getType()))
                 .version(GeneratorSupport.safeText(databaseInfo.getVersion()))
                 .schemaName(GeneratorSupport.safeText(databaseInfo.getSchemaName()))
                 .catalogName(GeneratorSupport.safeText(databaseInfo.getCatalogName()))
                 .charset(GeneratorSupport.safeText(databaseInfo.getCharset()))
                 .collation(GeneratorSupport.safeText(databaseInfo.getCollation()))
-                .tableCount(CollUtil.size(tables))
+                .tableCount(tableCount)
                 .hasTables(CollUtil.isNotEmpty(tables))
                 .showDatabaseOverview(renderContext.hasSection("DATABASE_OVERVIEW"))
                 .showTableOverview(renderContext.hasSection("TABLE_OVERVIEW"))

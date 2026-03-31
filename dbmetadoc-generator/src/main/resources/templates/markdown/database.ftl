@@ -20,34 +20,22 @@ ${view.subtitle}
 
 </#if>
 <#if view.showTableOverview && view.hasTables>
-## 二、表概览
+## 一、表目录
 
-| 序号 | 表名 | Schema | 列数 | 注释 |
-| --- | --- | --- | --- | --- |
+| 序号 | 表名 | 表说明 |
+| --- | --- | --- |
 <#list view.tableOverviewRows![] as table>
-| ${table.tableNo!0} | ${table.name!""} | ${table.schema!""} | ${table.columnCount!0} | ${table.comment!""} |
+| ${table.tableNo!0} | ${table.schema!""}<#if table.schema?has_content>.</#if>${table.name!""} | ${table.comment!""} |
 </#list>
 
 </#if>
 <#if view.hasTables>
 <#list view.tables![] as table>
-## 三.${table.tableNo!0} ${table.name!""}
+## ${table.tableNo!0}. ${table.schema!""}<#if table.schema?has_content>.</#if>${table.name!""}
 
 > ${table.comment!""}
-
-<#if table.showTableOverview>
-### 表基本属性
-
-| 表属性 | 内容 | 表属性 | 内容 |
-| --- | --- | --- | --- |
-| Schema | ${table.schema!""} | 主键 | ${table.primaryKey!""} |
-| 引擎 | ${table.engine!""} | 字符集 | ${table.charset!""} |
-| 排序规则 | ${table.collation!""} | 行格式 | ${table.rowFormat!""} |
-| 表类型 | ${table.tableType!""} | 字段数量 | ${table.columnCount!0} |
-
-</#if>
 <#if table.hasBasicColumns>
-### 核心字段清单
+### 字段清单
 
 主字段表固定保留 6 列核心字段，适合中文 A4 文档阅读和打印。
 

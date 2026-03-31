@@ -35,13 +35,13 @@ class DocumentGeneratorSmokeTest {
         DocumentRenderContext renderContext = buildRenderContext();
 
         String html = new String(DocumentGeneratorFactory.create("HTML").generate(renderContext), StandardCharsets.UTF_8);
-        assertTrue(html.contains("核心字段清单"));
+        assertTrue(html.contains("字段清单"));
         assertTrue(html.contains("字段扩展补充"));
         assertTrue(html.contains("数据库结构文档"));
         assertFalse(html.contains(">字段列表<"));
 
         String markdown = new String(DocumentGeneratorFactory.create("MARKDOWN").generate(renderContext), StandardCharsets.UTF_8);
-        assertTrue(markdown.contains("核心字段清单"));
+        assertTrue(markdown.contains("字段清单"));
         assertTrue(markdown.contains("字段扩展补充"));
         assertTrue(markdown.contains("| 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
         assertFalse(markdown.contains("| 序号 | 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
@@ -53,7 +53,10 @@ class DocumentGeneratorSmokeTest {
         byte[] word = DocumentGeneratorFactory.create("WORD").generate(renderContext);
         try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(word))) {
             String xml = document.getDocument().xmlText();
-            assertTrue(xml.contains("核心字段清单"));
+            assertTrue(xml.contains("目 录"));
+            assertTrue(xml.contains("共 1 张表"));
+            assertTrue(xml.contains("1. biz.order_main"));
+            assertTrue(xml.contains("列名"));
             assertTrue(xml.contains("字段扩展补充"));
             assertTrue(xml.contains("数据库结构文档"));
             assertFalse(xml.contains("字段列表"));
@@ -63,7 +66,7 @@ class DocumentGeneratorSmokeTest {
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excel))) {
             assertEquals("库概览", workbook.getSheetName(0));
             assertTrue(workbook.getSheetName(1).startsWith("01_"));
-            assertTrue(sheetContains(workbook, "核心字段清单"));
+            assertTrue(sheetContains(workbook, "字段清单"));
             assertTrue(sheetContains(workbook, "字段扩展补充"));
         }
     }

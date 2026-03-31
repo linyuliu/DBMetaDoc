@@ -60,26 +60,25 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
         Sheet sheet = workbook.createSheet("库概览");
         int rowIndex = 0;
         rowIndex = writeMergedTitle(sheet, rowIndex, 0, 5, view.getTitle(), styles.title);
+        rowIndex = writeKeyValue(sheet, rowIndex, "数据库名称", view.getDatabaseName(), styles);
+        rowIndex = writeKeyValue(sheet, rowIndex, "表数量", String.valueOf(view.getTableCount()), styles);
+        rowIndex = writeKeyValue(sheet, rowIndex, "生成时间", view.getGeneratedAt(), styles);
         if (Boolean.TRUE.equals(view.getShowDatabaseOverview())) {
-            rowIndex = writeKeyValue(sheet, rowIndex, "数据库名称", view.getDatabaseName(), styles);
             rowIndex = writeKeyValue(sheet, rowIndex, "数据库类型", view.getType(), styles);
             rowIndex = writeKeyValue(sheet, rowIndex, "Schema", view.getSchemaName(), styles);
             rowIndex = writeKeyValue(sheet, rowIndex, "Catalog", view.getCatalogName(), styles);
             rowIndex = writeKeyValue(sheet, rowIndex, "字符集", view.getCharset(), styles);
             rowIndex = writeKeyValue(sheet, rowIndex, "排序规则", view.getCollation(), styles);
             rowIndex = writeKeyValue(sheet, rowIndex, "版本", view.getVersion(), styles);
-            rowIndex = writeKeyValue(sheet, rowIndex, "生成时间", view.getGeneratedAt(), styles);
         }
         if (Boolean.TRUE.equals(view.getShowTableOverview()) && CollUtil.isNotEmpty(view.getTableOverviewRows())) {
             rowIndex++;
-            rowIndex = writeSectionTitle(sheet, rowIndex, 0, 4, "表概览", styles.section);
-            rowIndex = writeHeaderRow(sheet, rowIndex, List.of("序号", "表名", "Schema", "列数", "注释"), styles.header);
+            rowIndex = writeSectionTitle(sheet, rowIndex, 0, 2, "表目录", styles.section);
+            rowIndex = writeHeaderRow(sheet, rowIndex, List.of("序号", "表名", "表说明"), styles.header);
             for (DocumentTableModel table : view.getTableOverviewRows()) {
                 rowIndex = writeValuesRow(sheet, rowIndex, List.of(
                         String.valueOf(table.getTableNo()),
-                        table.getName(),
-                        table.getSchema(),
-                        String.valueOf(table.getColumnCount()),
+                        (table.getSchema() == null || table.getSchema().isBlank() ? "" : table.getSchema() + ".") + table.getName(),
                         table.getComment()
                 ), styles.body);
             }
@@ -97,18 +96,11 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
             int rowIndex = 0;
             rowIndex = writeMergedTitle(sheet, rowIndex, 0, 6, table.getChapterTitle(), styles.title);
 
-            if (Boolean.TRUE.equals(table.getShowTableOverview())) {
-                rowIndex = writeKeyValue(sheet, rowIndex, "表注释", table.getComment(), styles);
-                rowIndex = writeKeyValue(sheet, rowIndex, "Schema", table.getSchema(), styles);
-                rowIndex = writeKeyValue(sheet, rowIndex, "引擎", table.getEngine(), styles);
-                rowIndex = writeKeyValue(sheet, rowIndex, "字符集", table.getCharset(), styles);
-                rowIndex = writeKeyValue(sheet, rowIndex, "排序规则", table.getCollation(), styles);
-                rowIndex = writeKeyValue(sheet, rowIndex, "行格式", table.getRowFormat(), styles);
-            }
+            rowIndex = writeKeyValue(sheet, rowIndex, "表说明", table.getComment(), styles);
 
             if (Boolean.TRUE.equals(table.getHasBasicColumns())) {
                 rowIndex++;
-                rowIndex = writeSectionTitle(sheet, rowIndex, 0, 5, "核心字段清单", styles.section);
+                rowIndex = writeSectionTitle(sheet, rowIndex, 0, 5, "字段清单", styles.section);
                 rowIndex = writeHeaderRow(sheet, rowIndex, List.of("字段名", "类型", "主键", "可空", "默认值", "注释"), styles.header);
                 for (DocumentColumnModel column : table.getColumns()) {
                     rowIndex = writeRow(sheet, rowIndex, List.of(

@@ -68,8 +68,6 @@ public enum ExportSection {
 
     public static EnumSet<ExportSection> defaults() {
         return EnumSet.of(
-                DATABASE_OVERVIEW,
-                TABLE_OVERVIEW,
                 COLUMN_BASIC,
                 INDEXES,
                 FOREIGN_KEYS
