@@ -23,7 +23,11 @@ public class HtmlDocumentGenerator implements DocumentGenerator {
     }
 
     public String generateHtml(DocumentRenderContext renderContext) throws Exception {
-        Map<String, Object> model = FreeMarkerConfig.buildModel(renderContext);
+        return generateHtml(renderContext, DocumentRenderTarget.HTML_PREVIEW);
+    }
+
+    public String generateHtml(DocumentRenderContext renderContext, DocumentRenderTarget renderTarget) throws Exception {
+        Map<String, Object> model = FreeMarkerConfig.buildModel(renderContext, renderTarget);
         return FreeMarkerConfig.render("html/database.ftl", model);
     }
 }

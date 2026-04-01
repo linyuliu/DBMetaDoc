@@ -5,7 +5,7 @@
  * @date 2026-03-28
  */
 
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchDatasourceList, removeDatasource } from '../api/dbmeta'
@@ -26,8 +26,6 @@ export function useTemplateCenterPage() {
   const router = useRouter()
   const loading = ref(false)
   const datasourceList = ref<DatasourceDetail[]>([])
-
-  const recentTemplates = computed(() => datasourceList.value.slice(0, 4))
 
   onMounted(() => {
     void loadDatasourceList()
@@ -66,7 +64,6 @@ export function useTemplateCenterPage() {
   return {
     loading,
     datasourceList,
-    recentTemplates,
     loadDatasourceList,
     handleNewExport,
     handleUseTemplate,

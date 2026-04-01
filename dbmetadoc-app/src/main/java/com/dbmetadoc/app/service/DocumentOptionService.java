@@ -25,6 +25,7 @@ public class DocumentOptionService {
                 .defaultFontPreset(fontProfileService.defaultCode())
                 .fontPresets(fontProfileService.listOptions())
                 .exportSections(Arrays.stream(ExportSection.values())
+                        .filter(section -> section != ExportSection.TABLE_OVERVIEW)
                         .map(section -> ExportSectionResponse.builder()
                                 .code(section.getCode())
                                 .label(section.getLabel())

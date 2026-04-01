@@ -5,9 +5,13 @@ import com.dbmetadoc.common.model.DatabaseInfo;
 import com.dbmetadoc.common.model.ForeignKeyInfo;
 import com.dbmetadoc.common.model.IndexInfo;
 import com.dbmetadoc.common.model.TableInfo;
+import com.dbmetadoc.generator.support.GeneratorSupport;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -38,12 +42,22 @@ class DocumentGeneratorSmokeTest {
         assertTrue(html.contains("字段清单"));
         assertTrue(html.contains("字段扩展补充"));
         assertTrue(html.contains("数据库结构文档"));
+        assertTrue(html.contains("chapter-number"));
+        assertTrue(html.contains(">可空<"));
+        assertTrue(html.contains("√"));
+        assertTrue(html.contains("×"));
+        assertTrue(html.contains("<colgroup>"));
         assertFalse(html.contains(">字段列表<"));
+        assertFalse(html.contains("预览目录"));
+        assertFalse(html.contains("返回目录"));
+        assertFalse(html.contains("表目录"));
 
         String markdown = new String(DocumentGeneratorFactory.create("MARKDOWN").generate(renderContext), StandardCharsets.UTF_8);
         assertTrue(markdown.contains("字段清单"));
         assertTrue(markdown.contains("字段扩展补充"));
         assertTrue(markdown.contains("| 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
+        assertTrue(markdown.contains("√"));
+        assertTrue(markdown.contains("×"));
         assertFalse(markdown.contains("| 序号 | 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
 
         byte[] pdf = DocumentGeneratorFactory.create("PDF").generate(renderContext);
@@ -53,13 +67,21 @@ class DocumentGeneratorSmokeTest {
         byte[] word = DocumentGeneratorFactory.create("WORD").generate(renderContext);
         try (XWPFDocument document = new XWPFDocument(new ByteArrayInputStream(word))) {
             String xml = document.getDocument().xmlText();
-            assertTrue(xml.contains("目 录"));
             assertTrue(xml.contains("共 1 张表"));
-            assertTrue(xml.contains("1. biz.order_main"));
+            assertTrue(xml.contains("biz.order_main"));
+            assertTrue(xml.contains("序号"));
             assertTrue(xml.contains("列名"));
+            assertTrue(xml.contains("可空"));
+            assertTrue(xml.contains("√"));
+            assertTrue(xml.contains("×"));
             assertTrue(xml.contains("字段扩展补充"));
             assertTrue(xml.contains("数据库结构文档"));
+            assertFalse(xml.contains("{{"));
+            assertFalse(xml.contains("[field]"));
             assertFalse(xml.contains("字段列表"));
+            assertFalse(xml.contains("数 据 表 目 录"));
+            assertTrue(hasChapterTitleRuns(document, "1. biz.order_main"));
+            assertTrue(hasBoldCell(document, "id"));
         }
 
         byte[] excel = DocumentGeneratorFactory.create("EXCEL").generate(renderContext);
@@ -68,7 +90,24 @@ class DocumentGeneratorSmokeTest {
             assertTrue(workbook.getSheetName(1).startsWith("01_"));
             assertTrue(sheetContains(workbook, "字段清单"));
             assertTrue(sheetContains(workbook, "字段扩展补充"));
+            assertTrue(sheetContains(workbook, "√"));
+            assertTrue(sheetContains(workbook, "×"));
+            assertFalse(sheetContains(workbook, "表目录"));
         }
+    }
+
+    @Test
+    void shouldRenderTextBooleanDisplayWhenRequested() throws Exception {
+        DocumentRenderContext renderContext = buildRenderContext(GeneratorSupport.BOOLEAN_STYLE_TEXT);
+
+        String html = new String(DocumentGeneratorFactory.create("HTML").generate(renderContext), StandardCharsets.UTF_8);
+        String markdown = new String(DocumentGeneratorFactory.create("MARKDOWN").generate(renderContext), StandardCharsets.UTF_8);
+
+        assertTrue(html.contains(">是<"));
+        assertTrue(html.contains(">否<"));
+        assertFalse(html.contains("√"));
+        assertTrue(markdown.contains("| id | BIGINT | 是 | 否 | 0 | 主键 |"));
+        assertFalse(markdown.contains("√"));
     }
 
     private boolean sheetContains(XSSFWorkbook workbook, String expectedText) {
@@ -85,7 +124,38 @@ class DocumentGeneratorSmokeTest {
         return false;
     }
 
+    private boolean hasChapterTitleRuns(XWPFDocument document, String expectedText) {
+        for (XWPFParagraph paragraph : document.getParagraphs()) {
+            if (expectedText.equals(paragraph.getText()) && paragraph.getRuns().size() >= 3) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasBoldCell(XWPFDocument document, String expectedText) {
+        for (XWPFTable table : document.getTables()) {
+            for (var row : table.getRows()) {
+                for (XWPFTableCell cell : row.getTableCells()) {
+                    if (!expectedText.equals(cell.getText())) {
+                        continue;
+                    }
+                    for (XWPFParagraph paragraph : cell.getParagraphs()) {
+                        if (paragraph.getRuns().stream().anyMatch(run -> run.isBold())) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private DocumentRenderContext buildRenderContext() {
+        return buildRenderContext(null);
+    }
+
+    private DocumentRenderContext buildRenderContext(String booleanDisplayStyle) {
         ColumnInfo idColumn = ColumnInfo.builder()
                 .name("id")
                 .type("BIGINT")
@@ -179,6 +249,7 @@ class DocumentGeneratorSmokeTest {
                 .database(databaseInfo)
                 .visibleSections(visibleSections)
                 .fontProfile(fontProfile)
+                .booleanDisplayStyle(booleanDisplayStyle)
                 .build();
     }
 }

@@ -31,8 +31,12 @@ public final class DocumentTemplateModelFactory {
     }
 
     public static DocumentTemplateModel create(DocumentRenderContext renderContext) {
+        return create(renderContext, DocumentRenderTarget.HTML_PREVIEW);
+    }
+
+    public static DocumentTemplateModel create(DocumentRenderContext renderContext, DocumentRenderTarget renderTarget) {
         DatabaseInfo databaseInfo = renderContext.getDatabase();
-        DocumentTheme theme = DocumentThemeFactory.create(renderContext.getFontProfile());
+        DocumentTheme theme = DocumentThemeFactory.create(renderContext.getFontProfile(), renderTarget);
         List<DocumentTableModel> tables = buildTables(databaseInfo, renderContext);
         String databaseName = GeneratorSupport.defaultText(databaseInfo.getDatabaseName(), databaseInfo.getName());
         int tableCount = CollUtil.size(tables);
@@ -65,15 +69,20 @@ public final class DocumentTemplateModelFactory {
         if (databaseInfo == null || CollUtil.isEmpty(databaseInfo.getTables())) {
             return List.of();
         }
+        String booleanDisplayStyle = renderContext == null ? GeneratorSupport.normalizeBooleanDisplayStyle(null)
+                : renderContext.getBooleanDisplayStyle();
         int tableNo = 1;
         List<DocumentTableModel> tables = CollUtil.newArrayList();
         for (TableInfo tableInfo : databaseInfo.getTables()) {
-            List<DocumentColumnModel> columns = buildColumns(tableInfo.getColumns());
-            List<DocumentIndexModel> indexes = buildIndexes(tableInfo.getIndexes());
+            List<DocumentColumnModel> columns = buildColumns(tableInfo.getColumns(), booleanDisplayStyle);
+            List<DocumentIndexModel> indexes = buildIndexes(tableInfo.getIndexes(), booleanDisplayStyle);
             List<DocumentForeignKeyModel> foreignKeys = buildForeignKeys(tableInfo.getForeignKeys());
+            String fullTableName = GeneratorSupport.safeText(tableInfo.getSchema())
+                    + (GeneratorSupport.hasText(tableInfo.getSchema()) ? "." : "")
+                    + GeneratorSupport.safeText(tableInfo.getName());
             tables.add(DocumentTableModel.builder()
                     .tableNo(tableNo)
-                    .chapterTitle(tableNo + " " + GeneratorSupport.safeText(tableInfo.getName()))
+                    .chapterTitle(tableNo + ". " + fullTableName)
                     .name(GeneratorSupport.safeText(tableInfo.getName()))
                     .comment(GeneratorSupport.defaultText(tableInfo.getComment(), "未填写表注释"))
                     .schema(GeneratorSupport.safeText(tableInfo.getSchema()))
@@ -97,13 +106,17 @@ public final class DocumentTemplateModelFactory {
                     .extendedColumns(columns)
                     .indexes(indexes)
                     .foreignKeys(foreignKeys)
+                    .basicColumnLayout(DocumentTableLayoutCalculator.buildBasicColumnLayout(columns))
+                    .extendedColumnLayout(DocumentTableLayoutCalculator.buildExtendedColumnLayout(columns))
+                    .indexLayout(DocumentTableLayoutCalculator.buildIndexLayout(indexes))
+                    .foreignKeyLayout(DocumentTableLayoutCalculator.buildForeignKeyLayout(foreignKeys))
                     .build());
             tableNo++;
         }
         return tables;
     }
 
-    private static List<DocumentColumnModel> buildColumns(List<ColumnInfo> columns) {
+    private static List<DocumentColumnModel> buildColumns(List<ColumnInfo> columns, String booleanDisplayStyle) {
         if (CollUtil.isEmpty(columns)) {
             return List.of();
         }
@@ -115,16 +128,16 @@ public final class DocumentTemplateModelFactory {
                     .orderNo(columnInfo.getOrdinalPosition() != null ? columnInfo.getOrdinalPosition() : orderNo)
                     .name(GeneratorSupport.safeText(columnInfo.getName()))
                     .type(GeneratorSupport.safeText(columnInfo.getType()))
-                    .primaryKeyText(GeneratorSupport.yesNo(columnInfo.getPrimaryKey()))
-                    .nullableText(GeneratorSupport.yesNo(columnInfo.getNullable()))
+                    .primaryKeyText(GeneratorSupport.booleanDisplay(columnInfo.getPrimaryKey(), booleanDisplayStyle))
+                    .nullableText(GeneratorSupport.booleanDisplay(columnInfo.getNullable(), booleanDisplayStyle))
                     .defaultValue(GeneratorSupport.safeText(columnInfo.getDefaultValue()))
                     .comment(GeneratorSupport.safeText(columnInfo.getComment()))
                     .rawType(GeneratorSupport.safeText(columnInfo.getRawType()))
                     .javaType(GeneratorSupport.safeText(columnInfo.getJavaType()))
                     .lengthText(GeneratorSupport.safeNumber(columnInfo.getLength()))
                     .precisionScaleText(precisionScaleText)
-                    .autoIncrementText(GeneratorSupport.yesNo(columnInfo.getAutoIncrement()))
-                    .generatedText(GeneratorSupport.yesNo(columnInfo.getGenerated()))
+                    .autoIncrementText(GeneratorSupport.booleanDisplay(columnInfo.getAutoIncrement(), booleanDisplayStyle))
+                    .generatedText(GeneratorSupport.booleanDisplay(columnInfo.getGenerated(), booleanDisplayStyle))
                     .extendedSummary(GeneratorSupport.buildExtendedSummary(columnInfo))
                     .build());
             orderNo++;
@@ -132,7 +145,7 @@ public final class DocumentTemplateModelFactory {
         return columnModels;
     }
 
-    private static List<DocumentIndexModel> buildIndexes(List<IndexInfo> indexes) {
+    private static List<DocumentIndexModel> buildIndexes(List<IndexInfo> indexes, String booleanDisplayStyle) {
         if (CollUtil.isEmpty(indexes)) {
             return List.of();
         }
@@ -140,7 +153,7 @@ public final class DocumentTemplateModelFactory {
                 .map(indexInfo -> DocumentIndexModel.builder()
                         .name(GeneratorSupport.safeText(indexInfo.getName()))
                         .columnNamesText(GeneratorSupport.joinChinese(indexInfo.getColumnNames()))
-                        .uniqueText(GeneratorSupport.yesNo(indexInfo.getUnique()))
+                        .uniqueText(GeneratorSupport.booleanDisplay(indexInfo.getUnique(), booleanDisplayStyle))
                         .type(GeneratorSupport.safeText(indexInfo.getType()))
                         .build())
                 .toList();

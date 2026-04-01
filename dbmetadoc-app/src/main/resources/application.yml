@@ -4,11 +4,24 @@ server:
 spring:
   application:
     name: dbmetadoc
+  main:
+    allow-circular-references: off
   datasource:
-    url: jdbc:mysql://${DBMETA_DB_HOST:xxx}:${DBMETA_DB_PORT:3306}/${DBMETA_DB_NAME:dbmeta}?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${DBMETA_DB_HOST:mumuhk.oldletter.cn}:${DBMETA_DB_PORT:3306}/${DBMETA_DB_NAME:dbmeta}?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: ${DBMETA_DB_USER:root}
-    password: ${DBMETA_DB_PASSWORD:xxx}
+    password: ${DBMETA_DB_PASSWORD:linyu1996}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  task:
+    execution:
+      thread-name-prefix: ${DBMETADOC_TASK_THREAD_PREFIX:dbmetadoc-io-}
+      pool:
+        core-size: ${DBMETADOC_TASK_CORE_SIZE:4}
+        max-size: ${DBMETADOC_TASK_MAX_SIZE:8}
+        queue-capacity: ${DBMETADOC_TASK_QUEUE_CAPACITY:100}
+        keep-alive: ${DBMETADOC_TASK_KEEP_ALIVE:60s}
+      shutdown:
+        await-termination: true
+        await-termination-period: ${DBMETADOC_TASK_AWAIT_TERMINATION:30s}
   freemarker:
     enabled: false
   sql:
@@ -24,6 +37,14 @@ logging:
 dbmetadoc:
   cache:
     ttl-hours: 12
+  target-datasource:
+    pool:
+      minimum-idle: ${DBMETADOC_TARGET_POOL_MIN_IDLE:0}
+      maximum-pool-size: ${DBMETADOC_TARGET_POOL_MAX_SIZE:4}
+      connection-timeout-ms: ${DBMETADOC_TARGET_POOL_CONNECTION_TIMEOUT_MS:10000}
+      validation-timeout-ms: ${DBMETADOC_TARGET_POOL_VALIDATION_TIMEOUT_MS:5000}
+      idle-timeout-ms: ${DBMETADOC_TARGET_POOL_IDLE_TIMEOUT_MS:30000}
+      max-lifetime-ms: ${DBMETADOC_TARGET_POOL_MAX_LIFETIME_MS:120000}
   cors:
     allowed-origins:
       - http://localhost:5173
@@ -31,3 +52,7 @@ dbmetadoc:
     allowed-methods:
       - GET
       - POST
+  security:
+    password-secret: ${DBMETADOC_PASSWORD_SECRET:dbmetadoc-dev-secret-20260328}
+  font:
+    additional-directories: ${DBMETADOC_FONT_DIRECTORIES:}

@@ -1,0 +1,240 @@
+[
+  {
+    "name": "mysql-basic",
+    "jdbcUrl": "jdbc:mysql://127.0.0.1:3307/demo_db?useSSL=false&serverTimezone=UTC",
+    "vendorCode": "MYSQL",
+    "matchedPrefix": "jdbc:mysql:",
+    "supported": true,
+    "mappedDbType": "MYSQL",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "database": "demo_db",
+    "schema": null,
+    "serviceNameOrSid": "demo_db",
+    "sidMode": false,
+    "parameters": {
+      "useSSL": "false",
+      "serverTimezone": "UTC"
+    }
+  },
+  {
+    "name": "mariadb-alias",
+    "jdbcUrl": "jdbc:mariadb://192.168.1.8:3306/maria_db?useUnicode=true",
+    "vendorCode": "MARIADB",
+    "matchedPrefix": "jdbc:mariadb:",
+    "supported": true,
+    "mappedDbType": "MYSQL",
+    "host": "192.168.1.8",
+    "port": 3306,
+    "database": "maria_db",
+    "schema": null,
+    "serviceNameOrSid": "maria_db",
+    "sidMode": false,
+    "parameters": {
+      "useUnicode": "true"
+    }
+  },
+  {
+    "name": "tidb-alias",
+    "jdbcUrl": "jdbc:tidb://tidb.internal:4000/app_tidb?rewriteBatchedStatements=true",
+    "vendorCode": "TIDB",
+    "matchedPrefix": "jdbc:tidb:",
+    "supported": true,
+    "mappedDbType": "MYSQL",
+    "host": "tidb.internal",
+    "port": 4000,
+    "database": "app_tidb",
+    "schema": null,
+    "serviceNameOrSid": "app_tidb",
+    "sidMode": false,
+    "parameters": {
+      "rewriteBatchedStatements": "true"
+    }
+  },
+  {
+    "name": "postgresql-current-schema",
+    "jdbcUrl": "jdbc:postgresql://10.0.0.1:5432/app_db?currentSchema=biz&sslmode=disable",
+    "vendorCode": "POSTGRESQL",
+    "matchedPrefix": "jdbc:postgresql:",
+    "supported": true,
+    "mappedDbType": "POSTGRESQL",
+    "host": "10.0.0.1",
+    "port": 5432,
+    "database": "app_db",
+    "schema": "biz",
+    "serviceNameOrSid": "app_db",
+    "sidMode": false,
+    "parameters": {
+      "currentSchema": "biz",
+      "sslmode": "disable"
+    }
+  },
+  {
+    "name": "edb-alias",
+    "jdbcUrl": "jdbc:edb://10.0.0.5:5444/edb_db?currentSchema=app",
+    "vendorCode": "EDB",
+    "matchedPrefix": "jdbc:edb:",
+    "supported": true,
+    "mappedDbType": "POSTGRESQL",
+    "host": "10.0.0.5",
+    "port": 5444,
+    "database": "edb_db",
+    "schema": "app",
+    "serviceNameOrSid": "edb_db",
+    "sidMode": false,
+    "parameters": {
+      "currentSchema": "app"
+    }
+  },
+  {
+    "name": "oracle-service",
+    "jdbcUrl": "jdbc:oracle:thin:@//127.0.0.1:1521/ORCLPDB1?remarks=true",
+    "vendorCode": "ORACLE",
+    "matchedPrefix": "jdbc:oracle:thin:@",
+    "supported": true,
+    "mappedDbType": "ORACLE",
+    "host": "127.0.0.1",
+    "port": 1521,
+    "database": "ORCLPDB1",
+    "schema": null,
+    "serviceNameOrSid": "ORCLPDB1",
+    "sidMode": false,
+    "parameters": {
+      "remarks": "true"
+    }
+  },
+  {
+    "name": "oracle-sid",
+    "jdbcUrl": "jdbc:oracle:thin:@127.0.0.1:1521:ORCL",
+    "vendorCode": "ORACLE",
+    "matchedPrefix": "jdbc:oracle:thin:@",
+    "supported": true,
+    "mappedDbType": "ORACLE",
+    "host": "127.0.0.1",
+    "port": 1521,
+    "database": "ORCL",
+    "schema": null,
+    "serviceNameOrSid": "ORCL",
+    "sidMode": true,
+    "parameters": {}
+  },
+  {
+    "name": "alibaba-oracle",
+    "jdbcUrl": "jdbc:alibaba:oracle:thin:@//oracle.internal:1521/ERPDB",
+    "vendorCode": "ALIBABA_ORACLE",
+    "matchedPrefix": "jdbc:alibaba:oracle:",
+    "supported": true,
+    "mappedDbType": "ORACLE",
+    "host": "oracle.internal",
+    "port": 1521,
+    "database": "ERPDB",
+    "schema": null,
+    "serviceNameOrSid": "ERPDB",
+    "sidMode": false,
+    "parameters": {}
+  },
+  {
+    "name": "kingbase-alias",
+    "jdbcUrl": "jdbc:kingbase://127.0.0.1:54321/demo_kb?currentSchema=public",
+    "vendorCode": "KINGBASE",
+    "matchedPrefix": "jdbc:kingbase:",
+    "supported": true,
+    "mappedDbType": "KINGBASE",
+    "host": "127.0.0.1",
+    "port": 54321,
+    "database": "demo_kb",
+    "schema": "public",
+    "serviceNameOrSid": "demo_kb",
+    "sidMode": false,
+    "parameters": {
+      "currentSchema": "public"
+    }
+  },
+  {
+    "name": "dameng-schema",
+    "jdbcUrl": "jdbc:dm://127.0.0.1:5236/DBMETA?schema=SYSDBA",
+    "vendorCode": "DAMENG",
+    "matchedPrefix": "jdbc:dm:",
+    "supported": true,
+    "mappedDbType": "DAMENG",
+    "host": "127.0.0.1",
+    "port": 5236,
+    "database": "DBMETA",
+    "schema": "SYSDBA",
+    "serviceNameOrSid": "DBMETA",
+    "sidMode": false,
+    "parameters": {
+      "schema": "SYSDBA"
+    }
+  },
+  {
+    "name": "log4jdbc-wrapper",
+    "jdbcUrl": "jdbc:log4jdbc:jdbc:mysql://127.0.0.1:3306/wrapped_db?useSSL=false",
+    "vendorCode": "MYSQL",
+    "matchedPrefix": "jdbc:mysql:",
+    "supported": true,
+    "mappedDbType": "MYSQL",
+    "host": "127.0.0.1",
+    "port": 3306,
+    "database": "wrapped_db",
+    "schema": null,
+    "serviceNameOrSid": "wrapped_db",
+    "sidMode": false,
+    "parameters": {
+      "useSSL": "false"
+    }
+  },
+  {
+    "name": "sqlserver-unsupported",
+    "jdbcUrl": "jdbc:sqlserver://sql.internal:1433;databaseName=oa;schema=dbo;encrypt=false",
+    "vendorCode": "SQLSERVER",
+    "matchedPrefix": "jdbc:sqlserver:",
+    "supported": false,
+    "mappedDbType": null,
+    "host": "sql.internal",
+    "port": 1433,
+    "database": "oa",
+    "schema": "dbo",
+    "serviceNameOrSid": "oa",
+    "sidMode": false,
+    "parameters": {
+      "databaseName": "oa",
+      "schema": "dbo",
+      "encrypt": "false"
+    }
+  },
+  {
+    "name": "clickhouse-unsupported",
+    "jdbcUrl": "jdbc:clickhouse://ck.internal:8123/analytics?compress=1",
+    "vendorCode": "CLICKHOUSE",
+    "matchedPrefix": "jdbc:clickhouse:",
+    "supported": false,
+    "mappedDbType": null,
+    "host": "ck.internal",
+    "port": 8123,
+    "database": "analytics",
+    "schema": null,
+    "serviceNameOrSid": "analytics",
+    "sidMode": false,
+    "parameters": {
+      "compress": "1"
+    }
+  },
+  {
+    "name": "oceanbase-unsupported",
+    "jdbcUrl": "jdbc:oceanbase://ob.internal:2881/obdemo?useUnicode=true",
+    "vendorCode": "OCEANBASE",
+    "matchedPrefix": "jdbc:oceanbase:",
+    "supported": false,
+    "mappedDbType": null,
+    "host": "ob.internal",
+    "port": 2881,
+    "database": "obdemo",
+    "schema": null,
+    "serviceNameOrSid": "obdemo",
+    "sidMode": false,
+    "parameters": {
+      "useUnicode": "true"
+    }
+  }
+]

@@ -59,6 +59,7 @@ public class DocumentFilterService {
                 .database(filteredDatabase)
                 .visibleSections(ExportSection.codesOf(sections))
                 .fontProfile(toFontRenderProfile(fontProfile))
+                .booleanDisplayStyle(request.getBooleanDisplayStyle())
                 .build();
     }
 
@@ -88,7 +89,7 @@ public class DocumentFilterService {
         boolean hasColumns = sections.contains(ExportSection.COLUMN_BASIC) || sections.contains(ExportSection.COLUMN_EXTENDED);
         return TableInfo.builder()
                 .name(table.getName())
-                .comment(tableOverview ? table.getComment() : null)
+                .comment(table.getComment())
                 .schema(table.getSchema())
                 .primaryKey(table.getPrimaryKey())
                 .tableType(table.getTableType())
@@ -158,7 +159,11 @@ public class DocumentFilterService {
                 .titleFontCss(fontProfile.getTitleFontCss())
                 .bodyFontCss(fontProfile.getBodyFontCss())
                 .monoFontCss(fontProfile.getMonoFontCss())
+                .pdfTitleFontCss(fontProfile.getPdfTitleFontCss())
+                .pdfBodyFontCss(fontProfile.getPdfBodyFontCss())
+                .pdfMonoFontCss(fontProfile.getPdfMonoFontCss())
                 .pdfFontFiles(fontProfile.getPdfFontFiles())
+                .pdfFontResources(fontProfile.getPdfFontResources())
                 .build();
     }
 

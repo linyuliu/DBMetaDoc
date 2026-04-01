@@ -2,6 +2,7 @@ package com.dbmetadoc.generator;
 
 import cn.hutool.core.collection.CollUtil;
 import com.dbmetadoc.common.model.DatabaseInfo;
+import com.dbmetadoc.generator.support.GeneratorSupport;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +27,7 @@ public class DocumentRenderContext {
     private DatabaseInfo database;
     private Set<String> visibleSections;
     private FontRenderProfile fontProfile;
+    private String booleanDisplayStyle;
 
     public boolean hasSection(String sectionCode) {
         return CollUtil.isNotEmpty(visibleSections) && visibleSections.contains(sectionCode);
@@ -33,5 +35,13 @@ public class DocumentRenderContext {
 
     public void setVisibleSections(Set<String> visibleSections) {
         this.visibleSections = visibleSections == null ? null : new LinkedHashSet<>(visibleSections);
+    }
+
+    public String getBooleanDisplayStyle() {
+        return GeneratorSupport.normalizeBooleanDisplayStyle(booleanDisplayStyle);
+    }
+
+    public void setBooleanDisplayStyle(String booleanDisplayStyle) {
+        this.booleanDisplayStyle = GeneratorSupport.normalizeBooleanDisplayStyle(booleanDisplayStyle);
     }
 }

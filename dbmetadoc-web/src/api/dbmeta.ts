@@ -57,6 +57,7 @@ export interface DocumentPayload extends ConnectionPayload {
   selectedTableKeys?: string[]
   exportSections?: string[]
   fontPreset?: string
+  booleanDisplayStyle?: string
 }
 
 export interface PreviewResponse {

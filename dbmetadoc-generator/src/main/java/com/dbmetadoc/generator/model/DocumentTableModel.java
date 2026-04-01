@@ -44,4 +44,8 @@ public class DocumentTableModel {
     private List<DocumentColumnModel> extendedColumns;
     private List<DocumentIndexModel> indexes;
     private List<DocumentForeignKeyModel> foreignKeys;
+    private DocumentTableLayout basicColumnLayout;
+    private DocumentTableLayout extendedColumnLayout;
+    private DocumentTableLayout indexLayout;
+    private DocumentTableLayout foreignKeyLayout;
 }

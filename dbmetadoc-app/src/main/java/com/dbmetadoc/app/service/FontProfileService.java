@@ -6,6 +6,7 @@ import com.dbmetadoc.app.properties.FontProfileProperties;
 import com.dbmetadoc.app.service.document.FontPreset;
 import com.dbmetadoc.app.service.document.ResolvedFontProfile;
 import com.dbmetadoc.common.vo.FontPresetResponse;
+import com.dbmetadoc.generator.PdfFontResource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,11 +33,26 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class FontProfileService {
 
+    private static final String PDF_TITLE_FAMILY = "DBMetaDocPdfTitle";
+    private static final String PDF_BODY_FAMILY = "DBMetaDocPdfBody";
+    private static final String PDF_MONO_FAMILY = "DBMetaDocPdfMono";
+
     /**
      * 常见中英文字体名 → 文件名前缀映射。
      * key 为 normalizeFontName 后的结果，value 为文件名前缀（小写，无扩展名）。
      */
     private static final Map<String, String> FONT_NAME_ALIASES;
+    private static final List<String> PDF_CHINESE_FALLBACKS = List.of(
+            "Source Han Sans CN",
+            "Microsoft YaHei",
+            "微软雅黑",
+            "DengXian",
+            "等线",
+            "SimHei",
+            "黑体",
+            "SimSun",
+            "宋体"
+    );
 
     static {
         Map<String, String> m = new LinkedHashMap<>();
@@ -87,8 +103,13 @@ public class FontProfileService {
         collectPdfFonts(pdfFonts, fontFiles, titleFont);
         collectPdfFonts(pdfFonts, fontFiles, bodyFont);
         collectPdfFonts(pdfFonts, fontFiles, monoFont);
-        log.info("字体解析结果 [{}]：title={}，body={}，mono={}，PDF字体文件数={}",
-                preset.getCode(), titleFont, bodyFont, monoFont, pdfFonts.size());
+        PDF_CHINESE_FALLBACKS.forEach(fontName -> collectPdfFonts(pdfFonts, fontFiles, fontName));
+        List<PdfFontResource> pdfFontResources = buildPdfFontResources(fontFiles, titleFont, bodyFont, monoFont);
+        Set<String> pdfFamilies = pdfFontResources.stream()
+                .map(PdfFontResource::getFamily)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+        log.info("字体解析结果 [{}]：title={}，body={}，mono={}，PDF字体文件数={}，PDF嵌入别名={}",
+                preset.getCode(), titleFont, bodyFont, monoFont, pdfFonts.size(), pdfFamilies);
         return ResolvedFontProfile.builder()
                 .code(preset.getCode())
                 .label(preset.getLabel())
@@ -98,7 +119,20 @@ public class FontProfileService {
                 .titleFontCss(toCssFamily(preset.getTitleCandidates(), titleFont, "sans-serif"))
                 .bodyFontCss(toCssFamily(preset.getBodyCandidates(), bodyFont, "sans-serif"))
                 .monoFontCss(toCssFamily(preset.getMonoCandidates(), monoFont, "monospace"))
+                .pdfTitleFontCss(toPdfCssFamily(pdfFamilies,
+                        List.of(PDF_TITLE_FAMILY, PDF_BODY_FAMILY),
+                        List.of(titleFont, bodyFont),
+                        "sans-serif"))
+                .pdfBodyFontCss(toPdfCssFamily(pdfFamilies,
+                        List.of(PDF_BODY_FAMILY, PDF_TITLE_FAMILY),
+                        List.of(bodyFont, titleFont),
+                        "sans-serif"))
+                .pdfMonoFontCss(toPdfCssFamily(pdfFamilies,
+                        List.of(PDF_MONO_FAMILY, PDF_BODY_FAMILY),
+                        List.of(monoFont, bodyFont),
+                        "monospace"))
                 .pdfFontFiles(pdfFonts)
+                .pdfFontResources(pdfFontResources)
                 .build();
     }
 
@@ -164,18 +198,42 @@ public class FontProfileService {
     }
 
     private Path findFontPath(Map<String, Path> fontFiles, String fontName) {
+        Path embeddable = findEmbeddableFontPath(fontFiles, fontName);
+        if (embeddable != null) {
+            return embeddable;
+        }
+        return findAnyFontPath(fontFiles, fontName);
+    }
+
+    private Path findAnyFontPath(Map<String, Path> fontFiles, String fontName) {
         String normalized = normalizeFontName(fontName);
-        // 直接匹配：文件名包含字体名
         for (Map.Entry<String, Path> entry : fontFiles.entrySet()) {
             if (entry.getKey().contains(normalized)) {
                 return entry.getValue();
             }
         }
-        // 别名匹配：通过常见字体名→文件名映射
         String alias = FONT_NAME_ALIASES.get(normalized);
         if (alias != null) {
             for (Map.Entry<String, Path> entry : fontFiles.entrySet()) {
                 if (entry.getKey().startsWith(alias)) {
+                    return entry.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+    private Path findEmbeddableFontPath(Map<String, Path> fontFiles, String fontName) {
+        String normalized = normalizeFontName(fontName);
+        for (Map.Entry<String, Path> entry : fontFiles.entrySet()) {
+            if (isEmbeddableFont(entry.getValue()) && entry.getKey().contains(normalized)) {
+                return entry.getValue();
+            }
+        }
+        String alias = FONT_NAME_ALIASES.get(normalized);
+        if (alias != null) {
+            for (Map.Entry<String, Path> entry : fontFiles.entrySet()) {
+                if (isEmbeddableFont(entry.getValue()) && entry.getKey().startsWith(alias)) {
                     return entry.getValue();
                 }
             }
@@ -189,8 +247,69 @@ public class FontProfileService {
             fonts.add(primary);
         }
         fonts.addAll(candidates);
+        fonts.addAll(PDF_CHINESE_FALLBACKS);
         fonts.add(fallback);
         return fonts.stream()
+                .map(this::quoteFontFamily)
+                .reduce((left, right) -> left + ", " + right)
+                .orElse(fallback);
+    }
+
+    private List<PdfFontResource> buildPdfFontResources(Map<String, Path> fontFiles,
+                                                        String titleFont,
+                                                        String bodyFont,
+                                                        String monoFont) {
+        List<PdfFontResource> resources = new ArrayList<>();
+        addPdfFontResource(resources, PDF_TITLE_FAMILY,
+                findFirstEmbeddable(fontFiles, titleFont, bodyFont));
+        addPdfFontResource(resources, PDF_BODY_FAMILY,
+                findFirstEmbeddable(fontFiles, bodyFont, titleFont));
+        addPdfFontResource(resources, PDF_MONO_FAMILY,
+                findFirstEmbeddable(fontFiles, monoFont, bodyFont, titleFont));
+        return resources;
+    }
+
+    private Path findFirstEmbeddable(Map<String, Path> fontFiles, String... preferredFonts) {
+        for (String fontName : preferredFonts) {
+            Path fontPath = findEmbeddableFontPath(fontFiles, fontName);
+            if (fontPath != null) {
+                return fontPath;
+            }
+        }
+        for (String fallback : PDF_CHINESE_FALLBACKS) {
+            Path fontPath = findEmbeddableFontPath(fontFiles, fallback);
+            if (fontPath != null) {
+                return fontPath;
+            }
+        }
+        return null;
+    }
+
+    private void addPdfFontResource(List<PdfFontResource> resources, String family, Path fontPath) {
+        if (fontPath == null) {
+            return;
+        }
+        resources.add(PdfFontResource.builder()
+                .family(family)
+                .sourceUri(fontPath.toUri().toString())
+                .build());
+    }
+
+    private String toPdfCssFamily(Set<String> availableAliases,
+                                  List<String> preferredAliases,
+                                  List<String> preferredFonts,
+                                  String fallback) {
+        LinkedHashSet<String> fonts = new LinkedHashSet<>();
+        for (String alias : preferredAliases) {
+            if (availableAliases.contains(alias)) {
+                fonts.add(alias);
+            }
+        }
+        fonts.addAll(preferredFonts);
+        fonts.addAll(PDF_CHINESE_FALLBACKS);
+        fonts.add(fallback);
+        return fonts.stream()
+                .filter(StrUtil::isNotBlank)
                 .map(this::quoteFontFamily)
                 .reduce((left, right) -> left + ", " + right)
                 .orElse(fallback);
@@ -211,6 +330,11 @@ public class FontProfileService {
         return StrUtil.blankToDefault(value, "")
                 .replaceAll("[\\s\\-_]", "")
                 .toLowerCase(Locale.ROOT);
+    }
+
+    private boolean isEmbeddableFont(Path path) {
+        String value = path.getFileName().toString().toLowerCase(Locale.ROOT);
+        return value.endsWith(".ttf") || value.endsWith(".otf");
     }
 }
 

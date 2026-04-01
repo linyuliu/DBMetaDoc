@@ -26,6 +26,8 @@ public class DocumentRequest extends ConnectionRequest {
     private List<String> exportSections;
 
     private String fontPreset;
+
+    private String booleanDisplayStyle;
 }
 
 

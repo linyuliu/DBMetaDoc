@@ -1,5 +1,6 @@
 package com.dbmetadoc.app.service.document;
 
+import com.dbmetadoc.generator.PdfFontResource;
 import lombok.Builder;
 import lombok.Value;
 
@@ -23,7 +24,11 @@ public class ResolvedFontProfile {
     String titleFontCss;
     String bodyFontCss;
     String monoFontCss;
+    String pdfTitleFontCss;
+    String pdfBodyFontCss;
+    String pdfMonoFontCss;
     List<String> pdfFontFiles;
+    List<PdfFontResource> pdfFontResources;
 }
 
 

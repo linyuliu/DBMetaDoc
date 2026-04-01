@@ -24,9 +24,9 @@ import type { BlobResult } from '../utils/request'
 import type {
   ConnectionPayload,
   DatasourceDetail,
+  DocumentPayload,
   DocumentCatalogResponse,
   DocumentOptionsResponse,
-  DocumentPayload,
   DriverInfo,
   SaveDatasourcePayload
 } from '../api/dbmeta'
@@ -38,6 +38,8 @@ const DEFAULT_PORT = 3306
 const DEFAULT_FORMAT = 'HTML'
 const SOURCE_MODE_TEMPLATE = 'template'
 const SOURCE_MODE_MANUAL = 'manual'
+export const BOOLEAN_DISPLAY_SYMBOL = 'SYMBOL'
+export const BOOLEAN_DISPLAY_TEXT = 'TEXT'
 
 export const documentFormats = [
   { label: 'HTML', value: 'HTML' },
@@ -46,8 +48,19 @@ export const documentFormats = [
   { label: 'Word', value: 'WORD' },
   { label: 'Excel', value: 'EXCEL' }
 ] as const
+export const booleanDisplayOptions = [
+  { label: '√ / ×', value: BOOLEAN_DISPLAY_SYMBOL },
+  { label: '是 / 否', value: BOOLEAN_DISPLAY_TEXT }
+] as const
 
 type SourceMode = typeof SOURCE_MODE_TEMPLATE | typeof SOURCE_MODE_MANUAL
+type BooleanDisplayStyle = typeof BOOLEAN_DISPLAY_SYMBOL | typeof BOOLEAN_DISPLAY_TEXT
+
+interface JdbcFeedback {
+  tone: 'success' | 'warning'
+  title: string
+  detail: string
+}
 
 interface WizardFormModel {
   datasourceId: number | null
@@ -67,13 +80,18 @@ interface WizardFormModel {
   title: string
   format: string
   fontPreset: string
+  booleanDisplayStyle: BooleanDisplayStyle
   useCache: boolean
   forceRefresh: boolean
   selectedTableKeys: string[]
   exportSections: string[]
 }
 
-function createDefaultForm(): WizardFormModel {
+export function normalizeBooleanDisplayStyle(value?: string): BooleanDisplayStyle {
+  return value?.toUpperCase() === BOOLEAN_DISPLAY_TEXT ? BOOLEAN_DISPLAY_TEXT : BOOLEAN_DISPLAY_SYMBOL
+}
+
+export function createDefaultForm(): WizardFormModel {
   return {
     datasourceId: null,
     templateName: '',
@@ -92,6 +110,7 @@ function createDefaultForm(): WizardFormModel {
     title: '',
     format: DEFAULT_FORMAT,
     fontPreset: '',
+    booleanDisplayStyle: BOOLEAN_DISPLAY_SYMBOL,
     useCache: true,
     forceRefresh: false,
     selectedTableKeys: [],
@@ -129,6 +148,57 @@ function parseRouteDatasourceId(value: unknown) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
+export function buildPreviewDependencyKey(form: Pick<WizardFormModel,
+  'selectedTableKeys' | 'exportSections' | 'fontPreset' | 'title' | 'format' | 'booleanDisplayStyle'>) {
+  return [
+    form.selectedTableKeys.join('|'),
+    form.exportSections.join('|'),
+    form.fontPreset,
+    form.title,
+    form.format,
+    normalizeBooleanDisplayStyle(form.booleanDisplayStyle)
+  ].join('||')
+}
+
+export function buildConnectionPayloadFromForm(
+  form: Pick<WizardFormModel,
+  'datasourceId' | 'dbType' | 'jdbcUrl' | 'host' | 'port' | 'database' | 'schema' | 'username' | 'password' | 'useCache' | 'forceRefresh'>,
+  sourceMode: SourceMode,
+  canUseStoredPassword: boolean,
+  useStoredPassword: boolean
+): ConnectionPayload {
+  return {
+    datasourceId: sourceMode === SOURCE_MODE_TEMPLATE ? form.datasourceId : null,
+    dbType: form.dbType,
+    jdbcUrl: normalizeText(form.jdbcUrl),
+    host: normalizeText(form.host),
+    port: form.port,
+    database: normalizeText(form.database),
+    schema: normalizeText(form.schema),
+    username: normalizeText(form.username),
+    password: normalizeText(form.password),
+    useStoredPassword: canUseStoredPassword ? useStoredPassword : false,
+    useCache: form.useCache,
+    forceRefresh: form.forceRefresh
+  }
+}
+
+export function buildDocumentPayloadFromForm(
+  form: WizardFormModel,
+  sourceMode: SourceMode,
+  canUseStoredPassword: boolean
+): DocumentPayload {
+  return {
+    ...buildConnectionPayloadFromForm(form, sourceMode, canUseStoredPassword, form.useStoredPassword),
+    title: normalizeText(form.title),
+    format: form.format,
+    selectedTableKeys: [...form.selectedTableKeys],
+    exportSections: [...form.exportSections],
+    fontPreset: form.fontPreset,
+    booleanDisplayStyle: normalizeBooleanDisplayStyle(form.booleanDisplayStyle)
+  }
+}
+
 export function useExportWizardPage() {
   const route = useRoute()
   const router = useRouter()
@@ -142,6 +212,7 @@ export function useExportWizardPage() {
   const activeStep = ref(0)
   const sourceMode = ref<SourceMode>(SOURCE_MODE_TEMPLATE)
   const previewHtml = ref('')
+  const jdbcFeedback = ref<JdbcFeedback | null>(null)
   const drivers = ref<DriverInfo[]>([])
   const datasourceList = ref<DatasourceDetail[]>([])
   const documentOptions = ref<DocumentOptionsResponse | null>(null)
@@ -198,9 +269,8 @@ export function useExportWizardPage() {
   const activeDriver = computed(() => drivers.value.find(item => item.type === form.dbType) || null)
   const currentTemplate = computed(() => datasourceList.value.find(item => item.id === form.datasourceId) || null)
   const canUseStoredPassword = computed(() => sourceMode.value === SOURCE_MODE_TEMPLATE && Boolean(currentTemplate.value?.passwordSaved))
-  const selectedTableCount = computed(() => form.selectedTableKeys.length)
-  const selectedSectionCount = computed(() => form.exportSections.length)
   const availableTables = computed(() => catalog.value?.tables || [])
+  const selectedTableCount = computed(() => form.selectedTableKeys.length)
 
   onMounted(() => {
     void initialize()
@@ -217,7 +287,7 @@ export function useExportWizardPage() {
   )
 
   watch(
-    () => [form.selectedTableKeys.join('|'), form.exportSections.join('|'), form.fontPreset, form.title, form.format],
+    () => buildPreviewDependencyKey(form),
     () => {
       if (activeStep.value === 2 && previewEverLoaded.value) {
         schedulePreview()
@@ -265,12 +335,14 @@ export function useExportWizardPage() {
   }
 
   function handleDriverChange(type: string) {
+    clearJdbcFeedback()
     const driver = drivers.value.find(item => item.type === type) || null
     applyDriverDefaults(driver)
   }
 
   function handleSourceModeChange(mode: SourceMode) {
     sourceMode.value = mode
+    clearJdbcFeedback()
     if (mode === SOURCE_MODE_MANUAL) {
       resetForManualEntry()
       void router.replace({ path: '/export' })
@@ -302,10 +374,11 @@ export function useExportWizardPage() {
     form.schema = detail.schema || ''
     form.username = detail.username || ''
     form.password = ''
+    clearJdbcFeedback()
     clearDocumentState()
     await router.replace({ path: '/export', query: { datasourceId: String(detail.id) } })
     if (showMessage) {
-      ElMessage.success('模板已载入，可继续测试连接或直接加载目录')
+      ElMessage.success('模板已载入，可继续测试连接或直接加载表清单')
     }
   }
 
@@ -316,6 +389,7 @@ export function useExportWizardPage() {
     nextForm.fontPreset = documentOptions.value?.defaultFontPreset || ''
     nextForm.exportSections = [...(documentOptions.value?.defaultExportSections || [])]
     Object.assign(form, nextForm)
+    clearJdbcFeedback()
     sourceFormRef.value?.clearValidate()
     clearDocumentState()
   }
@@ -338,10 +412,14 @@ export function useExportWizardPage() {
     }
     try {
       const parsed = parseJdbcUrl(form.jdbcUrl)
-      if (parsed.dbType !== form.dbType) {
-        handleDriverChange(parsed.dbType)
+      const parsedDbType = parsed.dbType
+      if (!parsedDbType) {
+        throw new Error(parsed.unsupportedReason || '当前 JDBC URL 暂不支持自动识别数据库类型')
       }
-      form.dbType = parsed.dbType
+      if (parsedDbType !== form.dbType) {
+        handleDriverChange(parsedDbType)
+      }
+      form.dbType = parsedDbType
       if (parsed.host) {
         form.host = parsed.host
       }
@@ -354,9 +432,19 @@ export function useExportWizardPage() {
       if (parsed.schema !== undefined && (!normalizeText(form.schema) || hasExplicitSchemaParameter(parsed.parameters))) {
         form.schema = parsed.schema
       }
+      jdbcFeedback.value = {
+        tone: 'success',
+        title: `已识别为 ${resolveDriverLabel(parsedDbType)}`,
+        detail: buildJdbcFeedbackDetail(parsed.host, parsed.port, parsed.database, parsed.schema)
+      }
       ElMessage.success('JDBC URL 已解析并回填')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'JDBC URL 解析失败'
+      jdbcFeedback.value = {
+        tone: 'warning',
+        title: 'JDBC 解析未完成',
+        detail: message
+      }
       ElMessage.error(message)
     }
   }
@@ -366,31 +454,11 @@ export function useExportWizardPage() {
   }
 
   function buildConnectionPayload(): ConnectionPayload {
-    return {
-      datasourceId: sourceMode.value === SOURCE_MODE_TEMPLATE ? form.datasourceId : null,
-      dbType: form.dbType,
-      jdbcUrl: normalizeText(form.jdbcUrl),
-      host: normalizeText(form.host),
-      port: form.port,
-      database: normalizeText(form.database),
-      schema: normalizeText(form.schema),
-      username: normalizeText(form.username),
-      password: normalizeText(form.password),
-      useStoredPassword: canUseStoredPassword.value ? form.useStoredPassword : false,
-      useCache: form.useCache,
-      forceRefresh: form.forceRefresh
-    }
+    return buildConnectionPayloadFromForm(form, sourceMode.value, canUseStoredPassword.value, form.useStoredPassword)
   }
 
   function buildDocumentPayload(): DocumentPayload {
-    return {
-      ...buildConnectionPayload(),
-      title: normalizeText(form.title),
-      format: form.format,
-      selectedTableKeys: [...form.selectedTableKeys],
-      exportSections: [...form.exportSections],
-      fontPreset: form.fontPreset
-    }
+    return buildDocumentPayloadFromForm(form, sourceMode.value, canUseStoredPassword.value)
   }
 
   async function handleTestConnection(showMessage = true) {
@@ -416,7 +484,7 @@ export function useExportWizardPage() {
       previewHtml.value = ''
       previewEverLoaded.value = false
       if (showMessage) {
-        ElMessage.success(`已加载 ${result.tableCount} 张表`)
+        ElMessage.success(`已加载 ${result.tableCount} 张表到表清单`)
       }
       return result
     } finally {
@@ -434,7 +502,7 @@ export function useExportWizardPage() {
     await handleTestConnection(false)
     await loadCatalog()
     activeStep.value = 1
-    ElMessage.success('目录已准备完成，请选择导出范围')
+    ElMessage.success('表清单已准备完成，请选择导出范围')
   }
 
   async function handleSaveTemplate() {
@@ -540,6 +608,23 @@ export function useExportWizardPage() {
     void router.push('/')
   }
 
+  function resolveDriverLabel(dbType: string) {
+    return drivers.value.find(item => item.type === dbType)?.label || dbType || '未选择'
+  }
+
+  function buildJdbcFeedbackDetail(host?: string, port?: number, database?: string, schema?: string) {
+    const segments = [
+      host ? `主机 ${host}${port ? `:${port}` : ''}` : '',
+      database ? `数据库 ${database}` : '',
+      schema ? `Schema ${schema}` : ''
+    ].filter(Boolean)
+    return segments.length ? segments.join(' · ') : '已按 JDBC URL 回填可识别字段'
+  }
+
+  function clearJdbcFeedback() {
+    jdbcFeedback.value = null
+  }
+
   return {
     activeStep,
     sourceMode,
@@ -556,12 +641,13 @@ export function useExportWizardPage() {
     datasourceList,
     documentOptions,
     catalog,
+    availableTables,
     previewHtml,
-    currentTemplate,
+    jdbcFeedback,
     canUseStoredPassword,
     selectedTableCount,
-    selectedSectionCount,
     documentFormats,
+    booleanDisplayOptions,
     handleDriverChange,
     handleSourceModeChange,
     handleTemplateSelection,

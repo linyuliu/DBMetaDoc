@@ -18,8 +18,12 @@ import java.util.List;
  */
 public final class GeneratorSupport {
 
+    public static final String BOOLEAN_STYLE_SYMBOL = "SYMBOL";
+    public static final String BOOLEAN_STYLE_TEXT = "TEXT";
     private static final String YES = "是";
     private static final String NO = "否";
+    private static final String TRUE_SYMBOL = "√";
+    private static final String FALSE_SYMBOL = "×";
     private static final String EMPTY = "";
 
     private GeneratorSupport() {
@@ -51,6 +55,23 @@ public final class GeneratorSupport {
         return EMPTY;
     }
 
+    public static String normalizeBooleanDisplayStyle(String value) {
+        if (BOOLEAN_STYLE_TEXT.equalsIgnoreCase(StrUtil.blankToDefault(value, EMPTY))) {
+            return BOOLEAN_STYLE_TEXT;
+        }
+        return BOOLEAN_STYLE_SYMBOL;
+    }
+
+    public static String booleanDisplay(Boolean value, String style) {
+        if (BooleanUtil.isTrue(value)) {
+            return BOOLEAN_STYLE_TEXT.equals(normalizeBooleanDisplayStyle(style)) ? YES : TRUE_SYMBOL;
+        }
+        if (BooleanUtil.isFalse(value)) {
+            return BOOLEAN_STYLE_TEXT.equals(normalizeBooleanDisplayStyle(style)) ? NO : FALSE_SYMBOL;
+        }
+        return EMPTY;
+    }
+
     public static String safeNumber(Number value) {
         if (ObjectUtil.isNull(value)) {
             return EMPTY;
@@ -77,11 +98,12 @@ public final class GeneratorSupport {
         if (ObjectUtil.isNotNull(columnInfo.getLength())) {
             segments.add("长度：" + columnInfo.getLength());
         }
-        if (ObjectUtil.isNotNull(columnInfo.getPrecision()) || ObjectUtil.isNotNull(columnInfo.getScale())) {
-            segments.add(buildPrecisionScaleText(columnInfo.getPrecision(), columnInfo.getScale()));
+        if (BooleanUtil.isTrue(columnInfo.getAutoIncrement())) {
+            segments.add("自增：是");
         }
-        segments.add("自增：" + yesNo(columnInfo.getAutoIncrement()));
-        segments.add("生成列：" + yesNo(columnInfo.getGenerated()));
+        if (BooleanUtil.isTrue(columnInfo.getGenerated())) {
+            segments.add("生成列：是");
+        }
         return StrUtil.join("；", segments);
     }
 }

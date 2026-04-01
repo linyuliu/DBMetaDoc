@@ -5,6 +5,7 @@ import com.dbmetadoc.generator.model.DocumentColumnModel;
 import com.dbmetadoc.generator.model.DocumentForeignKeyModel;
 import com.dbmetadoc.generator.model.DocumentIndexModel;
 import com.dbmetadoc.generator.model.DocumentTableModel;
+import com.dbmetadoc.generator.model.DocumentTableLayout;
 import com.dbmetadoc.generator.model.DocumentTemplateModel;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -31,8 +32,8 @@ import java.util.List;
  */
 public class ExcelDocumentGenerator implements DocumentGenerator {
 
-    private static final int DEFAULT_ROW_HEIGHT = 420;
-    private static final int TITLE_ROW_HEIGHT = 560;
+    private static final float DEFAULT_ROW_HEIGHT = 21f;
+    private static final float TITLE_ROW_HEIGHT = 28f;
     private static final IndexedColors TITLE_BG = IndexedColors.GREY_25_PERCENT;
     private static final IndexedColors SECTION_BG = IndexedColors.PALE_BLUE;
     private static final IndexedColors HEADER_BG = IndexedColors.LIGHT_CORNFLOWER_BLUE;
@@ -71,18 +72,6 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
             rowIndex = writeKeyValue(sheet, rowIndex, "排序规则", view.getCollation(), styles);
             rowIndex = writeKeyValue(sheet, rowIndex, "版本", view.getVersion(), styles);
         }
-        if (Boolean.TRUE.equals(view.getShowTableOverview()) && CollUtil.isNotEmpty(view.getTableOverviewRows())) {
-            rowIndex++;
-            rowIndex = writeSectionTitle(sheet, rowIndex, 0, 2, "表目录", styles.section);
-            rowIndex = writeHeaderRow(sheet, rowIndex, List.of("序号", "表名", "表说明"), styles.header);
-            for (DocumentTableModel table : view.getTableOverviewRows()) {
-                rowIndex = writeValuesRow(sheet, rowIndex, List.of(
-                        String.valueOf(table.getTableNo()),
-                        (table.getSchema() == null || table.getSchema().isBlank() ? "" : table.getSchema() + ".") + table.getName(),
-                        table.getComment()
-                ), styles.body);
-            }
-        }
         setColumnWidths(sheet, 10, 22, 18, 10, 18, 32);
     }
 
@@ -100,17 +89,20 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
 
             if (Boolean.TRUE.equals(table.getHasBasicColumns())) {
                 rowIndex++;
-                rowIndex = writeSectionTitle(sheet, rowIndex, 0, 5, "字段清单", styles.section);
-                rowIndex = writeHeaderRow(sheet, rowIndex, List.of("字段名", "类型", "主键", "可空", "默认值", "注释"), styles.header);
-                for (DocumentColumnModel column : table.getColumns()) {
+                rowIndex = writeSectionTitle(sheet, rowIndex, 0, 6, "字段清单", styles.section);
+                rowIndex = writeHeaderRow(sheet, rowIndex, List.of("序号", "列名", "数据类型", "主键", "可空", "默认值", "列说明"), styles.header);
+                for (int columnIndex = 0; columnIndex < table.getColumns().size(); columnIndex++) {
+                    DocumentColumnModel column = table.getColumns().get(columnIndex);
                     rowIndex = writeRow(sheet, rowIndex, List.of(
+                            String.valueOf(column.getOrderNo()),
                             column.getName(),
                             column.getType(),
                             column.getPrimaryKeyText(),
                             column.getNullableText(),
                             column.getDefaultValue(),
                             column.getComment()
-                    ), styles);
+                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong),
+                            rowHeightForLines(table.getBasicColumnLayout(), columnIndex));
                 }
             }
 
@@ -118,14 +110,16 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
                 rowIndex++;
                 rowIndex = writeSectionTitle(sheet, rowIndex, 0, 4, "字段扩展补充", styles.section);
                 rowIndex = writeHeaderRow(sheet, rowIndex, List.of("序号", "字段名", "原始类型", "Java 类型", "扩展说明"), styles.header);
-                for (DocumentColumnModel column : table.getExtendedColumns()) {
+                for (int columnIndex = 0; columnIndex < table.getExtendedColumns().size(); columnIndex++) {
+                    DocumentColumnModel column = table.getExtendedColumns().get(columnIndex);
                     rowIndex = writeRow(sheet, rowIndex, List.of(
                             String.valueOf(column.getOrderNo()),
                             column.getName(),
                             column.getRawType(),
                             column.getJavaType(),
                             column.getExtendedSummary()
-                    ), styles);
+                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong),
+                            rowHeightForLines(table.getExtendedColumnLayout(), columnIndex));
                 }
             }
 
@@ -133,13 +127,15 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
                 rowIndex++;
                 rowIndex = writeSectionTitle(sheet, rowIndex, 0, 3, "索引信息", styles.section);
                 rowIndex = writeHeaderRow(sheet, rowIndex, List.of("索引名", "包含字段", "唯一", "类型"), styles.header);
-                for (DocumentIndexModel index : table.getIndexes()) {
+                for (int indexNo = 0; indexNo < table.getIndexes().size(); indexNo++) {
+                    DocumentIndexModel index = table.getIndexes().get(indexNo);
                     rowIndex = writeRow(sheet, rowIndex, List.of(
                             index.getName(),
                             index.getColumnNamesText(),
                             index.getUniqueText(),
                             index.getType()
-                    ), styles);
+                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong),
+                            rowHeightForLines(table.getIndexLayout(), indexNo));
                 }
             }
 
@@ -147,24 +143,30 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
                 rowIndex++;
                 rowIndex = writeSectionTitle(sheet, rowIndex, 0, 3, "外键信息", styles.section);
                 rowIndex = writeHeaderRow(sheet, rowIndex, List.of("外键名", "本表字段", "引用表", "引用字段"), styles.header);
-                for (DocumentForeignKeyModel foreignKey : table.getForeignKeys()) {
+                for (int foreignKeyIndex = 0; foreignKeyIndex < table.getForeignKeys().size(); foreignKeyIndex++) {
+                    DocumentForeignKeyModel foreignKey = table.getForeignKeys().get(foreignKeyIndex);
                     rowIndex = writeRow(sheet, rowIndex, List.of(
                             foreignKey.getName(),
                             foreignKey.getColumnName(),
                             foreignKey.getReferencedTable(),
                             foreignKey.getReferencedColumn()
-                    ), styles);
+                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong),
+                            rowHeightForLines(table.getForeignKeyLayout(), foreignKeyIndex));
                 }
             }
 
-            setColumnWidths(sheet, 22, 22, 12, 12, 18, 30, 18);
+            applySheetColumnWidths(sheet,
+                    table.getBasicColumnLayout(),
+                    table.getExtendedColumnLayout(),
+                    table.getIndexLayout(),
+                    table.getForeignKeyLayout());
             sheet.createFreezePane(0, 1);
         }
     }
 
     private int writeMergedTitle(Sheet sheet, int rowIndex, int firstCol, int lastCol, String title, CellStyle style) {
         Row row = sheet.createRow(rowIndex);
-        row.setHeight((short) TITLE_ROW_HEIGHT);
+        row.setHeightInPoints(TITLE_ROW_HEIGHT);
         for (int columnIndex = firstCol; columnIndex <= lastCol; columnIndex++) {
             Cell cell = row.createCell(columnIndex);
             if (columnIndex == firstCol) {
@@ -178,7 +180,7 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
 
     private int writeSectionTitle(Sheet sheet, int rowIndex, int firstCol, int lastCol, String title, CellStyle style) {
         Row row = sheet.createRow(rowIndex);
-        row.setHeight((short) DEFAULT_ROW_HEIGHT);
+        row.setHeightInPoints(DEFAULT_ROW_HEIGHT);
         for (int columnIndex = firstCol; columnIndex <= lastCol; columnIndex++) {
             Cell cell = row.createCell(columnIndex);
             if (columnIndex == firstCol) {
@@ -192,7 +194,7 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
 
     private int writeKeyValue(Sheet sheet, int rowIndex, String key, String value, Styles styles) {
         Row row = sheet.createRow(rowIndex);
-        row.setHeight((short) DEFAULT_ROW_HEIGHT);
+        row.setHeightInPoints(DEFAULT_ROW_HEIGHT);
         createCell(row, 0, key, styles.label);
         createCell(row, 1, value, styles.body);
         return rowIndex + 1;
@@ -200,7 +202,7 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
 
     private int writeHeaderRow(Sheet sheet, int rowIndex, List<String> headers, CellStyle style) {
         Row row = sheet.createRow(rowIndex);
-        row.setHeight((short) DEFAULT_ROW_HEIGHT);
+        row.setHeightInPoints(DEFAULT_ROW_HEIGHT);
         for (int index = 0; index < headers.size(); index++) {
             createCell(row, index, headers.get(index), style);
         }
@@ -209,19 +211,18 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
 
     private int writeValuesRow(Sheet sheet, int rowIndex, List<String> values, CellStyle style) {
         Row row = sheet.createRow(rowIndex);
-        row.setHeight((short) DEFAULT_ROW_HEIGHT);
+        row.setHeightInPoints(DEFAULT_ROW_HEIGHT);
         for (int index = 0; index < values.size(); index++) {
             createCell(row, index, values.get(index), style);
         }
         return rowIndex + 1;
     }
 
-    private int writeRow(Sheet sheet, int rowIndex, List<String> values, Styles styles) {
+    private int writeRow(Sheet sheet, int rowIndex, List<String> values, List<CellStyle> cellStyles, float rowHeight) {
         Row row = sheet.createRow(rowIndex);
-        row.setHeight((short) DEFAULT_ROW_HEIGHT);
+        row.setHeightInPoints(rowHeight);
         for (int index = 0; index < values.size(); index++) {
-            CellStyle style = index > 0 && index < 3 ? styles.mono : styles.body;
-            createCell(row, index, values.get(index), style);
+            createCell(row, index, values.get(index), cellStyles.get(index));
         }
         return rowIndex + 1;
     }
@@ -238,6 +239,41 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
         }
     }
 
+    private void applySheetColumnWidths(Sheet sheet, DocumentTableLayout... layouts) {
+        int maxColumns = 0;
+        for (DocumentTableLayout layout : layouts) {
+            if (layout != null && layout.getColumns() != null) {
+                maxColumns = Math.max(maxColumns, layout.getColumns().size());
+            }
+        }
+        for (int columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
+            double maxBudget = 8d;
+            for (DocumentTableLayout layout : layouts) {
+                if (layout == null || layout.getColumns() == null || columnIndex >= layout.getColumns().size()) {
+                    continue;
+                }
+                maxBudget = Math.max(maxBudget, layout.getColumns().get(columnIndex).getCharacterBudget());
+            }
+            sheet.setColumnWidth(columnIndex, DocumentTableLayoutCalculator.toExcelWidth(maxBudget) * 256);
+        }
+    }
+
+    private float rowHeightForLines(DocumentTableLayout layout, int rowIndex) {
+        if (layout == null || layout.getRowLineCounts() == null || rowIndex < 0 || rowIndex >= layout.getRowLineCounts().size()) {
+            return DEFAULT_ROW_HEIGHT;
+        }
+        return switch (Math.max(1, Math.min(layout.getRowLineCounts().get(rowIndex), 4))) {
+            case 1 -> 21f;
+            case 2 -> 33f;
+            case 3 -> 45f;
+            default -> 57f;
+        };
+    }
+
+    private List<CellStyle> rowStyles(CellStyle... styles) {
+        return List.of(styles);
+    }
+
     private Styles createStyles(XSSFWorkbook workbook, FontRenderProfile fontProfile) {
         Font titleFont = workbook.createFont();
         titleFont.setFontName(fontProfile == null ? "Microsoft YaHei" : fontProfile.getTitleFont());
@@ -245,7 +281,7 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
         titleFont.setFontHeightInPoints((short) 14);
 
         Font headerFont = workbook.createFont();
-        headerFont.setFontName(fontProfile == null ? "Microsoft YaHei" : fontProfile.getTitleFont());
+        headerFont.setFontName(fontProfile == null ? "DengXian" : fontProfile.getBodyFont());
         headerFont.setBold(true);
         headerFont.setFontHeightInPoints((short) 10);
 
@@ -258,9 +294,10 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
         bodyFont.setFontName(fontProfile == null ? "DengXian" : fontProfile.getBodyFont());
         bodyFont.setFontHeightInPoints((short) 10);
 
-        Font monoFont = workbook.createFont();
-        monoFont.setFontName(fontProfile == null ? "Cascadia Mono" : fontProfile.getMonoFont());
-        monoFont.setFontHeightInPoints((short) 10);
+        Font bodyBoldFont = workbook.createFont();
+        bodyBoldFont.setFontName(fontProfile == null ? "DengXian" : fontProfile.getBodyFont());
+        bodyBoldFont.setBold(true);
+        bodyBoldFont.setFontHeightInPoints((short) 10);
 
         CellStyle title = workbook.createCellStyle();
         title.setFont(titleFont);
@@ -299,11 +336,11 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
         body.setWrapText(true);
         applyBorder(body);
 
-        CellStyle mono = workbook.createCellStyle();
-        mono.cloneStyleFrom(body);
-        mono.setFont(monoFont);
+        CellStyle bodyStrong = workbook.createCellStyle();
+        bodyStrong.cloneStyleFrom(body);
+        bodyStrong.setFont(bodyBoldFont);
 
-        return new Styles(title, section, header, label, body, mono);
+        return new Styles(title, section, header, label, body, bodyStrong);
     }
 
     private void applyBorder(CellStyle style) {
@@ -324,6 +361,6 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
                           CellStyle header,
                           CellStyle label,
                           CellStyle body,
-                          CellStyle mono) {
+                          CellStyle bodyStrong) {
     }
 }

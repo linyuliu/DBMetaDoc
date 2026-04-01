@@ -8,6 +8,7 @@ import com.dbmetadoc.common.model.DatabaseInfo;
 import com.dbmetadoc.common.model.ForeignKeyInfo;
 import com.dbmetadoc.common.model.IndexInfo;
 import com.dbmetadoc.common.model.TableInfo;
+import com.dbmetadoc.generator.support.GeneratorSupport;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,6 +27,7 @@ class DocumentFilterServiceTest {
         DocumentRequest request = new DocumentRequest();
         request.setSelectedTableKeys(List.of("biz.order"));
         request.setExportSections(List.of("TABLE_OVERVIEW", "COLUMN_BASIC", "INDEXES"));
+        request.setBooleanDisplayStyle("text");
 
         var renderContext = documentFilterService.buildRenderContext(
                 buildDatabaseInfo(),
@@ -44,6 +46,7 @@ class DocumentFilterServiceTest {
                         .build());
 
         assertEquals("订单文档", renderContext.getTitle());
+        assertEquals(GeneratorSupport.BOOLEAN_STYLE_TEXT, renderContext.getBooleanDisplayStyle());
         assertEquals(1, renderContext.getDatabase().getTables().size());
         assertEquals("order", renderContext.getDatabase().getTables().get(0).getName());
         assertNull(renderContext.getDatabase().getType());
@@ -57,6 +60,57 @@ class DocumentFilterServiceTest {
     @Test
     void shouldExcludeColumnExtendedFromDefaultSections() {
         assertFalse(ExportSection.defaultCodes().contains("COLUMN_EXTENDED"));
+    }
+
+    @Test
+    void shouldPreserveTableCommentWithoutRenderingLegacyTableOverview() {
+        DocumentRequest request = new DocumentRequest();
+        request.setSelectedTableKeys(List.of("biz.order"));
+        request.setExportSections(List.of("TABLE_OVERVIEW", "COLUMN_BASIC"));
+
+        var renderContext = documentFilterService.buildRenderContext(
+                buildDatabaseInfo(),
+                request,
+                "订单文档",
+                ResolvedFontProfile.builder()
+                        .code("modern-cn")
+                        .label("现代中文")
+                        .titleFont("Microsoft YaHei")
+                        .bodyFont("DengXian")
+                        .monoFont("Cascadia Mono")
+                        .titleFontCss("\"Microsoft YaHei\", sans-serif")
+                        .bodyFontCss("\"DengXian\", sans-serif")
+                        .monoFontCss("\"Cascadia Mono\", monospace")
+                        .pdfFontFiles(List.of())
+                        .build());
+
+        assertEquals("订单表", renderContext.getDatabase().getTables().get(0).getComment());
+        assertTrue(renderContext.getVisibleSections().contains("TABLE_OVERVIEW"));
+    }
+
+    @Test
+    void shouldDefaultBooleanDisplayStyleToSymbolWhenRequestMissing() {
+        DocumentRequest request = new DocumentRequest();
+        request.setSelectedTableKeys(List.of("biz.order"));
+        request.setExportSections(List.of("COLUMN_BASIC"));
+
+        var renderContext = documentFilterService.buildRenderContext(
+                buildDatabaseInfo(),
+                request,
+                "订单文档",
+                ResolvedFontProfile.builder()
+                        .code("modern-cn")
+                        .label("现代中文")
+                        .titleFont("Microsoft YaHei")
+                        .bodyFont("DengXian")
+                        .monoFont("Cascadia Mono")
+                        .titleFontCss("\"Microsoft YaHei\", sans-serif")
+                        .bodyFontCss("\"DengXian\", sans-serif")
+                        .monoFontCss("\"Cascadia Mono\", monospace")
+                        .pdfFontFiles(List.of())
+                        .build());
+
+        assertEquals(GeneratorSupport.BOOLEAN_STYLE_SYMBOL, renderContext.getBooleanDisplayStyle());
     }
 
     private DatabaseInfo buildDatabaseInfo() {

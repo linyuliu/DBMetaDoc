@@ -47,7 +47,11 @@ public final class FreeMarkerConfig {
     }
 
     public static Map<String, Object> buildModel(DocumentRenderContext renderContext) {
-        DocumentTemplateModel view = DocumentTemplateModelFactory.create(renderContext);
+        return buildModel(renderContext, DocumentRenderTarget.HTML_PREVIEW);
+    }
+
+    public static Map<String, Object> buildModel(DocumentRenderContext renderContext, DocumentRenderTarget renderTarget) {
+        DocumentTemplateModel view = DocumentTemplateModelFactory.create(renderContext, renderTarget);
         Map<String, Object> model = new HashMap<>();
         model.put("view", view);
         model.put("theme", view.getTheme());
