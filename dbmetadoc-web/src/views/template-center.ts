@@ -16,10 +16,10 @@ function isCancelAction(error: unknown) {
 }
 
 function formatDatabaseLabel(item: DatasourceDetail) {
-  if (!item.database) {
-    return '未填写数据库'
+  if (item.database && item.schema) {
+    return `${item.database} / ${item.schema}`
   }
-  return item.schema ? `${item.database} / ${item.schema}` : item.database
+  return item.database || item.schema || '-'
 }
 
 export function useTemplateCenterPage() {
@@ -50,10 +50,10 @@ export function useTemplateCenterPage() {
 
   async function handleRemove(id: number) {
     try {
-      await ElMessageBox.confirm('删除后模板将被逻辑移除，是否继续？', '删除模板', { type: 'warning' })
+      await ElMessageBox.confirm('确认删除该模板？', '删除', { type: 'warning' })
       await removeDatasource(id)
       await loadDatasourceList()
-      ElMessage.success('模板已删除')
+      ElMessage.success('已删除')
     } catch (error: unknown) {
       if (!isCancelAction(error)) {
         throw error

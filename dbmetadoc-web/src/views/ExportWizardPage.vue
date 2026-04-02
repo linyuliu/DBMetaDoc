@@ -2,7 +2,7 @@
   <div class="admin-page wizard-page" v-loading="pageLoading">
     <div class="admin-toolbar">
       <h1>导出</h1>
-      <el-button @click="handleBackToTemplates">返回</el-button>
+      <el-button @click="handleBackToTemplates">模板</el-button>
     </div>
 
     <el-card class="admin-card step-card" shadow="never">
@@ -26,12 +26,12 @@
           <el-radio-button label="manual" value="manual">手工</el-radio-button>
         </el-radio-group>
 
-        <el-form ref="sourceFormRef" :model="form" :rules="rules" label-width="96px" class="source-form">
+        <el-form ref="sourceFormRef" :model="form" :rules="rules" label-width="80px" class="source-form">
           <div class="form-grid">
             <el-form-item v-if="sourceMode === 'template'" label="模板">
               <el-select
                 :model-value="form.datasourceId"
-                placeholder="请选择模板"
+                placeholder="选择"
                 clearable
                 filterable
                 @change="handleTemplateSelection"
@@ -50,18 +50,14 @@
               </el-select>
             </el-form-item>
 
-            <el-form-item label="名称">
-              <el-input v-model="form.templateName" />
-            </el-form-item>
-
             <el-form-item label="类型" prop="dbType">
-              <el-select v-model="form.dbType" placeholder="请选择数据库类型" @change="handleDriverChange">
+              <el-select v-model="form.dbType" placeholder="选择" @change="handleDriverChange">
                 <el-option v-for="driver in drivers" :key="driver.type" :label="driver.label" :value="driver.type" />
               </el-select>
             </el-form-item>
 
             <el-form-item label="JDBC URL" class="span-2">
-              <el-input v-model="form.jdbcUrl" placeholder="可选">
+              <el-input v-model="form.jdbcUrl" placeholder="选填">
                 <template #append>
                   <el-button @click="handleParseJdbcUrl">解析</el-button>
                 </template>
@@ -85,7 +81,7 @@
               <el-input v-model="form.database" />
             </el-form-item>
 
-            <el-form-item label="Schema">
+            <el-form-item v-if="showSchemaField" label="Schema">
               <el-input v-model="form.schema" />
             </el-form-item>
 
@@ -98,20 +94,30 @@
                 v-model="form.password"
                 type="password"
                 show-password
-                :placeholder="canUseStoredPassword ? '留空则使用已保存密码' : '请输入密码'"
+                :placeholder="canUseStoredPassword ? '可留空' : '请输入'"
               />
             </el-form-item>
-
-            <el-form-item label="备注" class="span-2">
-              <el-input v-model="form.remark" type="textarea" :rows="2" />
-            </el-form-item>
           </div>
 
-          <div class="switch-row">
-            <el-switch v-model="form.enabled" active-text="启用" />
-            <el-switch v-model="form.rememberPassword" active-text="保存密码" />
-            <el-switch v-model="form.useStoredPassword" active-text="已存密码" :disabled="!canUseStoredPassword" />
-          </div>
+          <el-collapse v-model="extraPanels" class="minor-box">
+            <el-collapse-item title="模板" name="template">
+              <div class="minor-grid">
+                <el-form-item label="名称" class="minor-field">
+                  <el-input v-model="form.templateName" />
+                </el-form-item>
+
+                <el-form-item label="备注" class="minor-field minor-span-2">
+                  <el-input v-model="form.remark" type="textarea" :rows="2" />
+                </el-form-item>
+              </div>
+
+              <div class="switch-row">
+                <el-switch v-model="form.enabled" active-text="启用" />
+                <el-switch v-model="form.rememberPassword" active-text="记住密码" />
+                <el-switch v-if="canUseStoredPassword" v-model="form.useStoredPassword" active-text="用已存密码" />
+              </div>
+            </el-collapse-item>
+          </el-collapse>
 
           <div class="action-row">
             <el-button :loading="testing" @click="handleTestConnection(true)">测试</el-button>
@@ -157,24 +163,24 @@
           ref="tableListRef"
           :data="availableTables"
           row-key="key"
-          empty-text="暂无数据表"
+          empty-text="暂无表"
           max-height="460"
-          class="table-select"
+          class="admin-table table-select"
           @selection-change="handleTableSelectionChange"
         >
           <el-table-column type="selection" width="52" reserve-selection />
-          <el-table-column prop="name" label="表名" min-width="260" show-overflow-tooltip />
-          <el-table-column label="Schema" width="140">
+          <el-table-column prop="name" label="表" min-width="260" show-overflow-tooltip />
+          <el-table-column v-if="showTableSchemaColumn" label="Schema" width="140">
             <template #default="{ row }">
               {{ row.schema || '-' }}
             </template>
           </el-table-column>
-          <el-table-column prop="comment" label="注释" min-width="320" show-overflow-tooltip />
-          <el-table-column prop="columnCount" label="列数" width="100" align="center" />
+          <el-table-column v-if="showTableCommentColumn" prop="comment" label="注释" min-width="300" show-overflow-tooltip />
+          <el-table-column prop="columnCount" label="列" width="88" align="center" />
         </el-table>
 
         <div class="admin-count-text table-footer">
-          已选 {{ selectedTableCount }} / {{ availableTables.length }}
+          已选 {{ selectedTableCount }}
         </div>
 
         <div class="action-row">
@@ -258,7 +264,7 @@
           </div>
         </template>
 
-        <el-empty v-if="!previewHtml && !previewing" description="暂无预览" />
+        <el-empty v-if="!previewHtml && !previewing" description="暂无" />
         <div v-else class="admin-preview-surface preview-panel" v-loading="previewing" v-html="previewHtml"></div>
       </el-card>
     </section>
@@ -291,6 +297,9 @@ const {
   jdbcFeedback,
   canUseStoredPassword,
   selectedTableCount,
+  showSchemaField,
+  showTableSchemaColumn,
+  showTableCommentColumn,
   documentFormats,
   booleanDisplayOptions,
   handleDriverChange,
@@ -312,6 +321,7 @@ const {
 } = useExportWizardPage()
 
 const tableListRef = ref<TableInstance>()
+const extraPanels = ref<string[]>([])
 let syncingTableSelection = false
 
 function handleTableSelectionChange(selection: TableOption[]) {
@@ -392,7 +402,7 @@ watch(activeStep, step => {
 .source-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .form-grid {
@@ -402,6 +412,7 @@ watch(activeStep, step => {
 }
 
 .span-2,
+.minor-span-2,
 .jdbc-feedback {
   grid-column: 1 / -1;
 }
@@ -445,6 +456,32 @@ watch(activeStep, step => {
 
 .option-line span:first-child {
   font-weight: 600;
+}
+
+.minor-box {
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+}
+
+.minor-box :deep(.el-collapse-item__header) {
+  padding: 0 12px;
+  font-size: 14px;
+  color: #303133;
+}
+
+.minor-box :deep(.el-collapse-item__content) {
+  padding-bottom: 0;
+}
+
+.minor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+  padding: 4px 0 8px;
+}
+
+.minor-field {
+  margin-bottom: 14px;
 }
 
 .section-grid {
@@ -536,6 +573,7 @@ watch(activeStep, step => {
 
 @media (max-width: 760px) {
   .form-grid,
+  .minor-grid,
   .section-grid,
   .export-grid,
   .advanced-grid {

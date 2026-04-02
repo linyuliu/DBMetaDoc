@@ -8,14 +8,8 @@
     </div>
 
     <el-card class="admin-card preview-card" shadow="never">
-      <template #header>
-        <div class="admin-card-header card-head">
-          <h2>内容</h2>
-        </div>
-      </template>
-
       <div v-if="htmlContent" class="admin-preview-surface html-preview" v-html="htmlContent"></div>
-      <el-empty v-else description="暂无预览" />
+      <el-empty v-else description="暂无" />
     </el-card>
   </div>
 </template>

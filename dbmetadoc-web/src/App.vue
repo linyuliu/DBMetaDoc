@@ -47,9 +47,9 @@ pre,
 }
 
 .admin-page {
-  max-width: 1360px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 .admin-toolbar,
@@ -72,7 +72,7 @@ pre,
 }
 
 .admin-toolbar h1 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
 }
 
@@ -88,12 +88,12 @@ pre,
 }
 
 .admin-card .el-card__header {
-  padding: 14px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--dbm-border-light);
 }
 
 .admin-card .el-card__body {
-  padding: 20px;
+  padding: 16px;
 }
 
 .admin-card-header h2 {
@@ -117,9 +117,9 @@ pre,
 }
 
 .admin-preview-surface {
-  min-height: 560px;
+  min-height: 480px;
   overflow: auto;
-  padding: 16px;
+  padding: 14px;
   border: 1px solid var(--dbm-border-light);
   border-radius: var(--dbm-radius-control);
   background: var(--dbm-bg-card);

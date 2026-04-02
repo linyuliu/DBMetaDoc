@@ -123,6 +123,10 @@ function normalizeText(value: string) {
   return trimmed ? trimmed : undefined
 }
 
+function hasText(value?: string | null) {
+  return Boolean(value && normalizeText(value))
+}
+
 function hasExplicitSchemaParameter(parameters: Record<string, string>) {
   const schemaKeys = ['schema', 'currentschema', 'current_schema']
   return Object.keys(parameters).some(key => schemaKeys.includes(key.toLowerCase()))
@@ -271,6 +275,9 @@ export function useExportWizardPage() {
   const canUseStoredPassword = computed(() => sourceMode.value === SOURCE_MODE_TEMPLATE && Boolean(currentTemplate.value?.passwordSaved))
   const availableTables = computed(() => catalog.value?.tables || [])
   const selectedTableCount = computed(() => form.selectedTableKeys.length)
+  const showSchemaField = computed(() => Boolean(activeDriver.value?.supportsSchema) || hasText(form.schema))
+  const showTableSchemaColumn = computed(() => availableTables.value.some(item => hasText(item.schema)))
+  const showTableCommentColumn = computed(() => availableTables.value.some(item => hasText(item.comment)))
 
   onMounted(() => {
     void initialize()
@@ -434,7 +441,7 @@ export function useExportWizardPage() {
       }
       jdbcFeedback.value = {
         tone: 'success',
-        title: `已识别为 ${resolveDriverLabel(parsedDbType)}`,
+        title: resolveDriverLabel(parsedDbType),
         detail: buildJdbcFeedbackDetail(parsed.host, parsed.port, parsed.database, parsed.schema)
       }
       ElMessage.success('JDBC URL 已解析并回填')
@@ -442,7 +449,7 @@ export function useExportWizardPage() {
       const message = error instanceof Error ? error.message : 'JDBC URL 解析失败'
       jdbcFeedback.value = {
         tone: 'warning',
-        title: 'JDBC 解析未完成',
+        title: '未识别',
         detail: message
       }
       ElMessage.error(message)
@@ -614,11 +621,11 @@ export function useExportWizardPage() {
 
   function buildJdbcFeedbackDetail(host?: string, port?: number, database?: string, schema?: string) {
     const segments = [
-      host ? `主机 ${host}${port ? `:${port}` : ''}` : '',
-      database ? `数据库 ${database}` : '',
+      host ? `${host}${port ? `:${port}` : ''}` : '',
+      database || '',
       schema ? `Schema ${schema}` : ''
     ].filter(Boolean)
-    return segments.length ? segments.join(' · ') : '已按 JDBC URL 回填可识别字段'
+    return segments.length ? segments.join(' · ') : '已回填'
   }
 
   function clearJdbcFeedback() {
@@ -646,6 +653,9 @@ export function useExportWizardPage() {
     jdbcFeedback,
     canUseStoredPassword,
     selectedTableCount,
+    showSchemaField,
+    showTableSchemaColumn,
+    showTableCommentColumn,
     documentFormats,
     booleanDisplayOptions,
     handleDriverChange,
