@@ -11,12 +11,13 @@ import com.dbmetadoc.generator.model.DocumentTheme;
  */
 public final class DocumentThemeFactory {
 
-    private static final String DEFAULT_TITLE_FONT = "Microsoft YaHei";
-    private static final String DEFAULT_BODY_FONT = "DengXian";
-    private static final String DEFAULT_MONO_FONT = "Cascadia Mono";
-    private static final String DEFAULT_TITLE_FONT_CSS = "\"Microsoft YaHei\", \"微软雅黑\", sans-serif";
-    private static final String DEFAULT_BODY_FONT_CSS = "\"DengXian\", \"等线\", sans-serif";
-    private static final String DEFAULT_MONO_FONT_CSS = "\"Cascadia Mono\", \"Consolas\", monospace";
+    private static final String DEFAULT_TITLE_FONT = "Source Han Sans CN";
+    private static final String DEFAULT_BODY_FONT = "Source Han Sans CN";
+    private static final String DEFAULT_MONO_FONT = "JetBrains Mono";
+    private static final String DEFAULT_TITLE_FONT_CSS = "\"SF Pro Display\", \"PingFang SC\", \"HarmonyOS Sans SC\", \"MiSans\", \"Source Han Sans CN\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif";
+    private static final String DEFAULT_BODY_FONT_CSS = "\"SF Pro Text\", \"PingFang SC\", \"HarmonyOS Sans SC\", \"MiSans\", \"Source Han Sans CN\", \"Noto Sans SC\", \"Microsoft YaHei\", sans-serif";
+    private static final String DEFAULT_MONO_FONT_CSS = "\"JetBrains Mono\", \"SF Mono\", \"Cascadia Mono\", \"Consolas\", monospace";
+    private static final String DEFAULT_SYMBOL_FONT_CSS = "\"PingFang SC\", \"HarmonyOS Sans SC\", \"MiSans\", \"Noto Sans SC\", \"Source Han Sans CN\", \"Segoe UI Symbol\", \"Segoe UI Emoji\", sans-serif";
 
     private DocumentThemeFactory() {
     }
@@ -42,6 +43,10 @@ public final class DocumentThemeFactory {
                         FontRenderProfile::getPdfMonoFontCss,
                         FontRenderProfile::getMonoFontCss,
                         DEFAULT_MONO_FONT_CSS))
+                .symbolFontCss(resolveFontCss(fontRenderProfile, renderTarget,
+                        FontRenderProfile::getPdfSymbolFontCss,
+                        FontRenderProfile::getSymbolFontCss,
+                        DEFAULT_SYMBOL_FONT_CSS))
                 .fontFaceCss(renderTarget == DocumentRenderTarget.PDF_PRINT
                         ? buildFontFaceCss(fontRenderProfile)
                         : "")

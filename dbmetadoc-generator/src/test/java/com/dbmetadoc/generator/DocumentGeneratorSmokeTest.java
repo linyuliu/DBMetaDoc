@@ -44,21 +44,24 @@ class DocumentGeneratorSmokeTest {
         assertTrue(html.contains("数据库结构文档"));
         assertTrue(html.contains("chapter-number"));
         assertTrue(html.contains(">可空<"));
-        assertTrue(html.contains("√"));
-        assertTrue(html.contains("×"));
+        assertTrue(html.contains("✔"));
+        assertTrue(html.contains("✘"));
         assertTrue(html.contains("<colgroup>"));
         assertFalse(html.contains(">字段列表<"));
         assertFalse(html.contains("预览目录"));
         assertFalse(html.contains("返回目录"));
         assertFalse(html.contains("表目录"));
+        assertTrue(html.contains("head-short"));
 
         String markdown = new String(DocumentGeneratorFactory.create("MARKDOWN").generate(renderContext), StandardCharsets.UTF_8);
         assertTrue(markdown.contains("字段清单"));
         assertTrue(markdown.contains("字段扩展补充"));
         assertTrue(markdown.contains("| 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
-        assertTrue(markdown.contains("√"));
-        assertTrue(markdown.contains("×"));
+        assertTrue(markdown.contains("✔"));
+        assertTrue(markdown.contains("✘"));
         assertFalse(markdown.contains("| 序号 | 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
+        assertFalse(markdown.contains("主字段表固定保留"));
+        assertFalse(markdown.contains("扩展信息下沉"));
 
         byte[] pdf = DocumentGeneratorFactory.create("PDF").generate(renderContext);
         assertTrue(pdf.length > 4);
@@ -72,8 +75,8 @@ class DocumentGeneratorSmokeTest {
             assertTrue(xml.contains("序号"));
             assertTrue(xml.contains("列名"));
             assertTrue(xml.contains("可空"));
-            assertTrue(xml.contains("√"));
-            assertTrue(xml.contains("×"));
+            assertTrue(xml.contains("✔"));
+            assertTrue(xml.contains("✘"));
             assertTrue(xml.contains("字段扩展补充"));
             assertTrue(xml.contains("数据库结构文档"));
             assertFalse(xml.contains("{{"));
@@ -90,8 +93,8 @@ class DocumentGeneratorSmokeTest {
             assertTrue(workbook.getSheetName(1).startsWith("01_"));
             assertTrue(sheetContains(workbook, "字段清单"));
             assertTrue(sheetContains(workbook, "字段扩展补充"));
-            assertTrue(sheetContains(workbook, "√"));
-            assertTrue(sheetContains(workbook, "×"));
+            assertTrue(sheetContains(workbook, "✔"));
+            assertTrue(sheetContains(workbook, "✘"));
             assertFalse(sheetContains(workbook, "表目录"));
         }
     }
@@ -105,9 +108,9 @@ class DocumentGeneratorSmokeTest {
 
         assertTrue(html.contains(">是<"));
         assertTrue(html.contains(">否<"));
-        assertFalse(html.contains("√"));
+        assertFalse(html.contains("✔"));
         assertTrue(markdown.contains("| id | BIGINT | 是 | 否 | 0 | 主键 |"));
-        assertFalse(markdown.contains("√"));
+        assertFalse(markdown.contains("✔"));
     }
 
     private boolean sheetContains(XSSFWorkbook workbook, String expectedText) {

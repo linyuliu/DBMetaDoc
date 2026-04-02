@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   BOOLEAN_DISPLAY_SYMBOL,
   BOOLEAN_DISPLAY_TEXT,
+  buildConnectionValidationKey,
   buildDocumentPayloadFromForm,
   buildPreviewDependencyKey,
+  continueToContentFlow,
   createDefaultForm
 } from './export-wizard'
 
@@ -56,5 +58,72 @@ describe('export wizard payload helpers', () => {
     expect(payload.datasourceId).toBeNull()
     expect(payload.booleanDisplayStyle).toBe(BOOLEAN_DISPLAY_TEXT)
     expect(payload.useStoredPassword).toBe(false)
+  })
+
+  it('builds different validation keys when connection fields change', () => {
+    const form = createDefaultForm()
+    form.datasourceId = 3
+    form.dbType = 'MYSQL'
+    form.host = '127.0.0.1'
+    form.port = 3306
+    form.database = 'dbmeta'
+    form.username = 'root'
+    form.password = 'secret'
+
+    const before = buildConnectionValidationKey(form, 'template', false, false)
+    form.database = 'dbmeta_archive'
+    const after = buildConnectionValidationKey(form, 'template', false, false)
+
+    expect(after).not.toBe(before)
+  })
+
+  it('keeps validation key stable when stored password is reused', () => {
+    const form = createDefaultForm()
+    form.datasourceId = 12
+    form.dbType = 'MYSQL'
+    form.host = '10.1.1.8'
+    form.port = 3306
+    form.database = 'dbmeta'
+    form.username = 'root'
+
+    const before = buildConnectionValidationKey(form, 'template', true, true)
+    form.password = 'typed-password-should-be-ignored'
+    const after = buildConnectionValidationKey(form, 'template', true, true)
+
+    expect(after).toBe(before)
+  })
+
+  it('skips explicit test when the current connection is already validated', async () => {
+    const validateSourceForm = vi.fn().mockResolvedValue(undefined)
+    const testConnection = vi.fn().mockResolvedValue(undefined)
+    const loadCatalog = vi.fn().mockResolvedValue(undefined)
+
+    await continueToContentFlow({
+      validateSourceForm,
+      hasValidatedConnection: true,
+      testConnection,
+      loadCatalog
+    })
+
+    expect(validateSourceForm).toHaveBeenCalledTimes(1)
+    expect(testConnection).not.toHaveBeenCalled()
+    expect(loadCatalog).toHaveBeenCalledTimes(1)
+  })
+
+  it('tests first when the current connection has not been validated', async () => {
+    const validateSourceForm = vi.fn().mockResolvedValue(undefined)
+    const testConnection = vi.fn().mockResolvedValue(undefined)
+    const loadCatalog = vi.fn().mockResolvedValue(undefined)
+
+    await continueToContentFlow({
+      validateSourceForm,
+      hasValidatedConnection: false,
+      testConnection,
+      loadCatalog
+    })
+
+    expect(validateSourceForm).toHaveBeenCalledTimes(1)
+    expect(testConnection).toHaveBeenCalledTimes(1)
+    expect(loadCatalog).toHaveBeenCalledTimes(1)
   })
 })

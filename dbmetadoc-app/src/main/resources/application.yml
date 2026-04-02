@@ -55,4 +55,4 @@ dbmetadoc:
   security:
     password-secret: ${DBMETADOC_PASSWORD_SECRET:dbmetadoc-dev-secret-20260328}
   font:
-    additional-directories: ${DBMETADOC_FONT_DIRECTORIES:}
+    additional-directories: ${DBMETADOC_FONT_DIRECTORIES:./dbmetadoc-local-fonts}

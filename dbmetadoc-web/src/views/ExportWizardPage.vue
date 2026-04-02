@@ -5,119 +5,133 @@
       <el-button @click="handleBackToTemplates">模板</el-button>
     </div>
 
-    <el-card class="admin-card step-card" shadow="never">
+    <div class="step-strip">
       <el-steps :active="activeStep" finish-status="success" simple>
         <el-step title="连接" />
         <el-step title="范围" />
         <el-step title="预览" />
       </el-steps>
-    </el-card>
+    </div>
 
     <section v-show="activeStep === 0" class="panel-shell">
       <el-card class="admin-card panel-card" shadow="never">
         <template #header>
           <div class="admin-card-header panel-head">
-            <h2>连接</h2>
+            <div class="card-title-row">
+              <h2>连接</h2>
+              <span :class="['state-pill', hasValidatedConnection ? 'is-valid' : 'is-pending']">
+                {{ hasValidatedConnection ? '已验证' : '待验证' }}
+              </span>
+            </div>
           </div>
         </template>
 
-        <el-radio-group :model-value="sourceMode" @change="handleSourceModeChange" class="mode-switch">
-          <el-radio-button label="template" value="template">模板</el-radio-button>
-          <el-radio-button label="manual" value="manual">手工</el-radio-button>
-        </el-radio-group>
+        <div class="form-topbar">
+          <el-radio-group :model-value="sourceMode" @change="handleSourceModeChange" class="mode-switch">
+            <el-radio-button label="template" value="template">模板</el-radio-button>
+            <el-radio-button label="manual" value="manual">手工</el-radio-button>
+          </el-radio-group>
+          <div class="status-tip">
+            {{ hasValidatedConnection ? '已缓存验证' : '首次进入将校验' }}
+          </div>
+        </div>
 
         <el-form ref="sourceFormRef" :model="form" :rules="rules" label-width="80px" class="source-form">
-          <div class="form-grid">
-            <el-form-item v-if="sourceMode === 'template'" label="模板">
-              <el-select
-                :model-value="form.datasourceId"
-                placeholder="选择"
-                clearable
-                filterable
-                @change="handleTemplateSelection"
-              >
-                <el-option
-                  v-for="item in datasourceList"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
+          <div class="form-panel">
+            <div class="panel-label">连接信息</div>
+            <div class="form-grid">
+              <el-form-item v-if="sourceMode === 'template'" label="模板">
+                <el-select
+                  :model-value="form.datasourceId"
+                  placeholder="选择"
+                  clearable
+                  filterable
+                  @change="handleTemplateSelection"
                 >
-                  <div class="option-line">
-                    <span>{{ item.name }}</span>
-                    <span>{{ item.dbType }}</span>
-                  </div>
-                </el-option>
-              </el-select>
-            </el-form-item>
+                  <el-option
+                    v-for="item in datasourceList"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id"
+                  >
+                    <div class="option-line">
+                      <span>{{ item.name }}</span>
+                      <span>{{ item.dbType }}</span>
+                    </div>
+                  </el-option>
+                </el-select>
+              </el-form-item>
 
-            <el-form-item label="类型" prop="dbType">
-              <el-select v-model="form.dbType" placeholder="选择" @change="handleDriverChange">
-                <el-option v-for="driver in drivers" :key="driver.type" :label="driver.label" :value="driver.type" />
-              </el-select>
-            </el-form-item>
+              <el-form-item label="类型" prop="dbType">
+                <el-select v-model="form.dbType" placeholder="选择" @change="handleDriverChange">
+                  <el-option v-for="driver in drivers" :key="driver.type" :label="driver.label" :value="driver.type" />
+                </el-select>
+              </el-form-item>
 
-            <el-form-item label="JDBC URL" class="span-2">
-              <el-input v-model="form.jdbcUrl" placeholder="选填">
-                <template #append>
-                  <el-button @click="handleParseJdbcUrl">解析</el-button>
-                </template>
-              </el-input>
-            </el-form-item>
+              <el-form-item label="JDBC URL" class="span-2">
+                <el-input v-model="form.jdbcUrl" placeholder="选填">
+                  <template #append>
+                    <el-button @click="handleParseJdbcUrl">解析</el-button>
+                  </template>
+                </el-input>
+              </el-form-item>
 
-            <div v-if="jdbcFeedback" :class="['jdbc-feedback', `is-${jdbcFeedback.tone}`]">
-              <span class="feedback-title">{{ jdbcFeedback.title }}</span>
-              <span class="feedback-detail">{{ jdbcFeedback.detail }}</span>
+              <div v-if="jdbcFeedback" :class="['jdbc-feedback', `is-${jdbcFeedback.tone}`]">
+                <span class="feedback-title">{{ jdbcFeedback.title }}</span>
+                <span class="feedback-detail">{{ jdbcFeedback.detail }}</span>
+              </div>
+
+              <el-form-item label="主机" prop="host">
+                <el-input v-model="form.host" placeholder="127.0.0.1" />
+              </el-form-item>
+
+              <el-form-item label="端口">
+                <el-input-number v-model="form.port" :min="1" :max="65535" controls-position="right" />
+              </el-form-item>
+
+              <el-form-item label="数据库" prop="database">
+                <el-input v-model="form.database" />
+              </el-form-item>
+
+              <el-form-item v-if="showSchemaField" label="Schema">
+                <el-input v-model="form.schema" />
+              </el-form-item>
+
+              <el-form-item label="用户" prop="username">
+                <el-input v-model="form.username" />
+              </el-form-item>
+
+              <el-form-item label="密码" prop="password">
+                <el-input
+                  v-model="form.password"
+                  type="password"
+                  show-password
+                  :placeholder="canUseStoredPassword ? '可留空' : '请输入'"
+                />
+              </el-form-item>
             </div>
-
-            <el-form-item label="主机" prop="host">
-              <el-input v-model="form.host" placeholder="127.0.0.1" />
-            </el-form-item>
-
-            <el-form-item label="端口">
-              <el-input-number v-model="form.port" :min="1" :max="65535" controls-position="right" />
-            </el-form-item>
-
-            <el-form-item label="数据库" prop="database">
-              <el-input v-model="form.database" />
-            </el-form-item>
-
-            <el-form-item v-if="showSchemaField" label="Schema">
-              <el-input v-model="form.schema" />
-            </el-form-item>
-
-            <el-form-item label="用户" prop="username">
-              <el-input v-model="form.username" />
-            </el-form-item>
-
-            <el-form-item label="密码" prop="password">
-              <el-input
-                v-model="form.password"
-                type="password"
-                show-password
-                :placeholder="canUseStoredPassword ? '可留空' : '请输入'"
-              />
-            </el-form-item>
           </div>
 
-          <el-collapse v-model="extraPanels" class="minor-box">
-            <el-collapse-item title="模板" name="template">
-              <div class="minor-grid">
-                <el-form-item label="名称" class="minor-field">
-                  <el-input v-model="form.templateName" />
-                </el-form-item>
+          <div class="minor-box">
+            <div class="minor-head">
+              <span>模板设置</span>
+            </div>
+            <div class="minor-grid">
+              <el-form-item label="名称" class="minor-field">
+                <el-input v-model="form.templateName" />
+              </el-form-item>
 
-                <el-form-item label="备注" class="minor-field minor-span-2">
-                  <el-input v-model="form.remark" type="textarea" :rows="2" />
-                </el-form-item>
-              </div>
+              <el-form-item label="备注" class="minor-field minor-span-2">
+                <el-input v-model="form.remark" type="textarea" :rows="2" />
+              </el-form-item>
+            </div>
 
-              <div class="switch-row">
-                <el-switch v-model="form.enabled" active-text="启用" />
-                <el-switch v-model="form.rememberPassword" active-text="记住密码" />
-                <el-switch v-if="canUseStoredPassword" v-model="form.useStoredPassword" active-text="用已存密码" />
-              </div>
-            </el-collapse-item>
-          </el-collapse>
+            <div class="switch-row">
+              <el-switch v-model="form.enabled" active-text="启用" />
+              <el-switch v-model="form.rememberPassword" active-text="记住密码" />
+              <el-switch v-if="canUseStoredPassword" v-model="form.useStoredPassword" active-text="用已存密码" />
+            </div>
+          </div>
 
           <div class="action-row">
             <el-button :loading="testing" @click="handleTestConnection(true)">测试</el-button>
@@ -132,8 +146,11 @@
       <el-card class="admin-card panel-card" shadow="never">
         <template #header>
           <div class="admin-card-header panel-head">
-            <h2>字段</h2>
+            <div class="card-title-row">
+              <h2>字段</h2>
+            </div>
             <div class="admin-toolbar-actions toolbar-actions">
+              <span class="admin-muted-text">{{ form.exportSections.length }} 项</span>
               <el-button text @click="handleResetSections">默认</el-button>
               <el-button text @click="handleSelectAllSections">全选</el-button>
             </div>
@@ -141,7 +158,11 @@
         </template>
 
         <el-checkbox-group v-model="form.exportSections" class="section-grid">
-          <label v-for="section in documentOptions?.exportSections || []" :key="section.code" class="section-row">
+          <label
+            v-for="section in documentOptions?.exportSections || []"
+            :key="section.code"
+            :class="['section-row', { 'is-active': form.exportSections.includes(section.code) }]"
+          >
             <el-checkbox :value="section.code">{{ section.label }}</el-checkbox>
           </label>
         </el-checkbox-group>
@@ -150,8 +171,11 @@
       <el-card class="admin-card panel-card" shadow="never">
         <template #header>
           <div class="admin-card-header panel-head">
-            <h2>表</h2>
+            <div class="card-title-row">
+              <h2>表</h2>
+            </div>
             <div class="admin-toolbar-actions toolbar-actions">
+              <span class="admin-muted-text">{{ selectedTableCount }} / {{ availableTables.length }}</span>
               <el-button text :loading="catalogLoading" @click="loadCatalog(true)">刷新</el-button>
               <el-button text @click="handleSelectAllTables">全选</el-button>
               <el-button text @click="handleClearTables">清空</el-button>
@@ -223,27 +247,25 @@
             </el-select>
           </label>
 
+          <div class="field-block field-wide">
+            <span class="field-label">布尔显示</span>
+            <el-radio-group v-model="form.booleanDisplayStyle" class="boolean-switch">
+              <el-radio-button
+                v-for="item in booleanDisplayOptions"
+                :key="item.value"
+                :label="item.value"
+                :value="item.value"
+              >
+                {{ item.label }}
+              </el-radio-button>
+            </el-radio-group>
+          </div>
+
           <el-collapse class="advanced-box">
             <el-collapse-item title="高级" name="advanced">
-              <div class="advanced-grid">
-                <div class="field-block">
-                  <span class="field-label">布尔</span>
-                  <el-radio-group v-model="form.booleanDisplayStyle">
-                    <el-radio-button
-                      v-for="item in booleanDisplayOptions"
-                      :key="item.value"
-                      :label="item.value"
-                      :value="item.value"
-                    >
-                      {{ item.label }}
-                    </el-radio-button>
-                  </el-radio-group>
-                </div>
-
-                <div class="switch-column">
-                  <el-switch v-model="form.useCache" active-text="使用缓存" />
-                  <el-switch v-model="form.forceRefresh" active-text="强制刷新" />
-                </div>
+              <div class="advanced-grid advanced-switches">
+                <el-switch v-model="form.useCache" active-text="使用缓存" />
+                <el-switch v-model="form.forceRefresh" active-text="强制刷新" />
               </div>
             </el-collapse-item>
           </el-collapse>
@@ -259,7 +281,10 @@
       <el-card class="admin-card panel-card preview-card" shadow="never">
         <template #header>
           <div class="admin-card-header panel-head">
-            <h2>预览</h2>
+            <div class="card-title-row">
+              <h2>预览</h2>
+              <span class="admin-muted-text">{{ form.selectedTableKeys.length }} 张表</span>
+            </div>
             <el-button text :loading="previewing" @click="handlePreview(true)">刷新</el-button>
           </div>
         </template>
@@ -296,6 +321,7 @@ const {
   previewHtml,
   jdbcFeedback,
   canUseStoredPassword,
+  hasValidatedConnection,
   selectedTableCount,
   showSchemaField,
   showTableSchemaColumn,
@@ -321,7 +347,6 @@ const {
 } = useExportWizardPage()
 
 const tableListRef = ref<TableInstance>()
-const extraPanels = ref<string[]>([])
 let syncingTableSelection = false
 
 function handleTableSelectionChange(selection: TableOption[]) {
@@ -361,12 +386,13 @@ watch(activeStep, step => {
 </script>
 
 <style scoped>
-.step-card {
-  margin-top: 16px;
-}
-
-.step-card :deep(.el-card__body) {
-  padding: 14px 20px;
+.step-strip {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(200, 210, 224, 0.9);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 252, 0.96));
+  box-shadow: 0 16px 40px -32px rgba(32, 56, 85, 0.45);
 }
 
 .panel-shell {
@@ -389,20 +415,55 @@ watch(activeStep, step => {
   justify-content: space-between;
 }
 
-.toolbar-actions,
-.action-row,
-.switch-row {
-  flex-wrap: wrap;
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
 .mode-switch {
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .source-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.form-panel,
+.minor-box {
+  border: 1px solid #e4e9f1;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #fbfcfe);
+}
+
+.form-panel {
+  padding: 16px 16px 4px;
+}
+
+.panel-label,
+.minor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #566579;
+  letter-spacing: 0.04em;
+}
+
+.minor-box {
+  padding: 14px 16px 16px;
 }
 
 .form-grid {
@@ -422,9 +483,9 @@ watch(activeStep, step => {
   flex-wrap: wrap;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid #dcdfe6;
-  border-radius: 8px;
-  background: #f8fafc;
+  border: 1px solid #dbe4f0;
+  border-radius: 12px;
+  background: #f6f9fd;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -448,6 +509,37 @@ watch(activeStep, step => {
   color: #606266;
 }
 
+.state-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.state-pill.is-valid {
+  color: #0f766e;
+  background: #e7f8f5;
+  border: 1px solid #bce9de;
+}
+
+.state-pill.is-pending {
+  color: #9a6700;
+  background: #fff6e5;
+  border: 1px solid #f2dab0;
+}
+
+.status-tip {
+  font-size: 12px;
+  color: #607287;
+  font-weight: 600;
+}
+
 .option-line {
   display: flex;
   justify-content: space-between;
@@ -458,30 +550,15 @@ watch(activeStep, step => {
   font-weight: 600;
 }
 
-.minor-box {
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
-}
-
-.minor-box :deep(.el-collapse-item__header) {
-  padding: 0 12px;
-  font-size: 14px;
-  color: #303133;
-}
-
-.minor-box :deep(.el-collapse-item__content) {
-  padding-bottom: 0;
-}
-
 .minor-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 16px;
-  padding: 4px 0 8px;
+  padding: 0;
 }
 
 .minor-field {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .section-grid {
@@ -495,9 +572,16 @@ watch(activeStep, step => {
   align-items: center;
   min-height: 42px;
   padding: 0 12px;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
-  background: #ffffff;
+  border: 1px solid #e4e9f1;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #fbfcfe);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.section-row.is-active {
+  border-color: #b6c8ee;
+  box-shadow: 0 10px 24px -20px rgba(59, 106, 190, 0.75);
+  transform: translateY(-1px);
 }
 
 .table-select :deep(.el-table__cell) {
@@ -520,21 +604,31 @@ watch(activeStep, step => {
   gap: 8px;
 }
 
+.field-wide {
+  grid-column: 1 / -1;
+}
+
 .field-label {
   font-size: 13px;
   color: #606266;
 }
 
+.boolean-switch {
+  align-self: flex-start;
+}
+
 .advanced-box {
   grid-column: 1 / -1;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
+  border: 1px solid #e4e9f1;
+  border-radius: 14px;
+  background: #fbfcfe;
 }
 
 .advanced-box :deep(.el-collapse-item__header) {
-  padding: 0 12px;
+  padding: 0 14px;
   font-size: 14px;
   color: #303133;
+  background: transparent;
 }
 
 .advanced-box :deep(.el-collapse-item__content) {
@@ -542,9 +636,9 @@ watch(activeStep, step => {
 }
 
 .advanced-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
-  gap: 16px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
   padding: 4px 0 12px;
 }
 
@@ -555,12 +649,50 @@ watch(activeStep, step => {
   justify-content: center;
 }
 
+.advanced-switches {
+  flex-wrap: nowrap;
+}
+
 .preview-card :deep(.el-card__body) {
-  padding: 0 20px 20px;
+  padding: 0 16px 16px;
 }
 
 .preview-panel {
   max-height: 80vh;
+}
+
+.step-strip :deep(.el-steps--simple) {
+  background: transparent;
+}
+
+.step-strip :deep(.el-step__title) {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.step-strip :deep(.is-process .el-step__title) {
+  color: #1f3b63;
+}
+
+.step-strip :deep(.is-process .el-step__icon) {
+  color: #2f5ea8;
+}
+
+.toolbar-actions {
+  flex-wrap: nowrap;
+}
+
+.action-row {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+.action-row :deep(.el-button:last-child) {
+  margin-left: 4px;
+}
+
+.switch-row {
+  flex-wrap: wrap;
 }
 
 @media (max-width: 1120px) {
@@ -572,12 +704,24 @@ watch(activeStep, step => {
 }
 
 @media (max-width: 760px) {
+  .form-topbar,
+  .card-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .form-grid,
   .minor-grid,
   .section-grid,
   .export-grid,
   .advanced-grid {
     grid-template-columns: 1fr;
+  }
+
+  .toolbar-actions,
+  .action-row,
+  .advanced-switches {
+    flex-wrap: wrap;
   }
 }
 </style>

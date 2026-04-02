@@ -9,6 +9,8 @@
 - 单体部署：前端构建产物直接打进 Spring Boot 应用
 - REST API：统一 `R<T>` 返回，导出接口返回文件流
 - 数据源模板：保存前强制连接测试，不持久化密码
+- 内置开源字体兜底：`Source Han Sans`、`Noto Sans SC`、`JetBrains Mono`
+- 本机品牌字体优先：支持 `SF Pro`、`PingFang SC`、`MiSans`、`HarmonyOS Sans SC` 作为可选回退
 
 ## 项目结构
 
@@ -55,3 +57,9 @@ DBMetaDoc/
 - JDK 17+
 - Maven 3.8+
 - Node.js 18+（可选，仅前端开发需要）
+
+## 字体说明
+
+- 仓库内只内置可再分发字体，具体文件与许可证见 `THIRD_PARTY_FONTS.md`
+- Apple SF / PingFang、MiSans、HarmonyOS Sans 不会随仓库分发，可放入 `dbmetadoc-local-fonts/` 供本机导出优先使用
+- 运行时也可以通过环境变量 `DBMETADOC_FONT_DIRECTORIES` 追加自定义字体目录，多个目录用逗号分隔

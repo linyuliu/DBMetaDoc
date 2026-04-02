@@ -1,13 +1,22 @@
 <template>
   <div class="admin-page result-page">
     <div class="admin-toolbar">
-      <h1>预览</h1>
-      <router-link to="/">
+      <div class="toolbar-heading">
+        <h1>预览</h1>
+        <span class="admin-muted-text">{{ htmlContent ? 'HTML' : '空' }}</span>
+      </div>
+      <router-link to="/" class="back-link">
         <el-button>返回</el-button>
       </router-link>
     </div>
 
     <el-card class="admin-card preview-card" shadow="never">
+      <template #header>
+        <div class="admin-card-header">
+          <h2>内容</h2>
+          <span class="admin-muted-text">{{ htmlContent ? '已加载' : '暂无内容' }}</span>
+        </div>
+      </template>
       <div v-if="htmlContent" class="admin-preview-surface html-preview" v-html="htmlContent"></div>
       <el-empty v-else description="暂无" />
     </el-card>
@@ -34,5 +43,9 @@ onMounted(() => {
 
 .html-preview {
   max-height: 80vh;
+}
+
+.back-link {
+  text-decoration: none;
 }
 </style>

@@ -101,7 +101,7 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
                             column.getNullableText(),
                             column.getDefaultValue(),
                             column.getComment()
-                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong),
+                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodySymbolStrong, styles.bodySymbolStrong, styles.bodyStrong, styles.bodyStrong),
                             rowHeightForLines(table.getBasicColumnLayout(), columnIndex));
                 }
             }
@@ -134,7 +134,7 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
                             index.getColumnNamesText(),
                             index.getUniqueText(),
                             index.getType()
-                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodyStrong, styles.bodyStrong),
+                    ), rowStyles(styles.bodyStrong, styles.bodyStrong, styles.bodySymbolStrong, styles.bodyStrong),
                             rowHeightForLines(table.getIndexLayout(), indexNo));
                 }
             }
@@ -299,6 +299,13 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
         bodyBoldFont.setBold(true);
         bodyBoldFont.setFontHeightInPoints((short) 10);
 
+        Font bodySymbolBoldFont = workbook.createFont();
+        bodySymbolBoldFont.setFontName(fontProfile == null || fontProfile.getSymbolFont() == null
+                ? "Noto Sans SC"
+                : fontProfile.getSymbolFont());
+        bodySymbolBoldFont.setBold(true);
+        bodySymbolBoldFont.setFontHeightInPoints((short) 10);
+
         CellStyle title = workbook.createCellStyle();
         title.setFont(titleFont);
         title.setAlignment(HorizontalAlignment.CENTER);
@@ -340,7 +347,11 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
         bodyStrong.cloneStyleFrom(body);
         bodyStrong.setFont(bodyBoldFont);
 
-        return new Styles(title, section, header, label, body, bodyStrong);
+        CellStyle bodySymbolStrong = workbook.createCellStyle();
+        bodySymbolStrong.cloneStyleFrom(body);
+        bodySymbolStrong.setFont(bodySymbolBoldFont);
+
+        return new Styles(title, section, header, label, body, bodyStrong, bodySymbolStrong);
     }
 
     private void applyBorder(CellStyle style) {
@@ -361,6 +372,7 @@ public class ExcelDocumentGenerator implements DocumentGenerator {
                           CellStyle header,
                           CellStyle label,
                           CellStyle body,
-                          CellStyle bodyStrong) {
+                          CellStyle bodyStrong,
+                          CellStyle bodySymbolStrong) {
     }
 }

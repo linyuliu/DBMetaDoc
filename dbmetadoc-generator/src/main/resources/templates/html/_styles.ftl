@@ -44,6 +44,7 @@ body {
   width: 100%;
   max-width: 184mm;
   margin: 0 auto;
+  background: #ffffff;
 }
 
 .screen-only-block,
@@ -69,7 +70,7 @@ body {
 .cover-title {
   margin: 0;
   font-family: ${theme.titleFontCss};
-  font-size: 19pt;
+  font-size: 20pt;
   line-height: 1.2;
   color: ${theme.primaryDarkColor};
 }
@@ -102,7 +103,7 @@ body {
   font-family: ${theme.titleFontCss};
   font-size: ${theme.sectionTitleSize};
   color: ${theme.primaryDarkColor};
-  padding-bottom: 1.6mm;
+  padding-bottom: 1.8mm;
   border-bottom: 0.28mm solid ${theme.borderColor};
 }
 
@@ -146,21 +147,23 @@ body {
 .table-section-title {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1.8mm;
+  justify-content: flex-start;
+  gap: 1.4mm;
 }
 
 .chapter-number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 8mm;
-  padding: 0.7mm 2.1mm;
-  border-radius: 999px;
-  background: ${theme.primaryColor};
-  color: #ffffff;
-  font-family: ${theme.titleFontCss};
-  font-size: 0.88em;
+  min-width: 7mm;
+  min-height: 6.2mm;
+  padding: 0 1.8mm;
+  border: 0.25mm solid ${theme.borderColor};
+  border-radius: 2mm;
+  background: #ffffff;
+  color: ${theme.labelColor};
+  font-family: ${theme.bodyFontCss};
+  font-size: 0.8em;
   font-weight: 700;
   line-height: 1;
 }
@@ -169,6 +172,10 @@ body {
 .chapter-title-text {
   color: ${theme.primaryDarkColor};
   font-weight: 700;
+}
+
+.chapter-title-text {
+  letter-spacing: 0.01em;
 }
 
 .table-comment-line {
@@ -214,6 +221,18 @@ th {
   text-align: left;
 }
 
+.head-short,
+.head-nowrap,
+.nowrap-cell {
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.head-short {
+  letter-spacing: 0.02em;
+}
+
 .stripe tbody tr:nth-child(even) td {
   background: ${theme.stripeColor};
 }
@@ -246,9 +265,9 @@ th {
 }
 
 .bool-cell {
-  font-family: ${theme.titleFontCss};
-  font-size: 0.96em;
-  letter-spacing: 0.08em;
+  font-family: ${theme.symbolFontCss};
+  font-size: 0.94em;
+  letter-spacing: 0.03em;
 }
 
 .row-lines-1 td {
@@ -287,7 +306,9 @@ th {
     margin: 0 auto;
     padding: 10mm 11mm 12mm;
     background: #ffffff;
-    box-shadow: 0 10px 30px rgba(28, 43, 58, 0.14);
+    border: 1px solid #d9dee7;
+    border-radius: 22px;
+    box-shadow: 0 18px 44px rgba(28, 43, 58, 0.08);
   }
 
   .cover {
@@ -307,10 +328,11 @@ th {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     margin-bottom: 10px;
     border: 1px solid #d7ddea;
-    background: #ffffff;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff, #fafcff);
   }
 
   .screen-kicker {
@@ -338,6 +360,8 @@ th {
     min-width: 0;
     background: #ffffff;
     border: 1px solid #d7ddea;
+    border-radius: 18px;
+    overflow: hidden;
   }
 
   .section {
@@ -367,7 +391,7 @@ th {
 
   .table-section-title {
     margin-bottom: 6px;
-    text-align: center;
+    text-align: left;
   }
 
   .sub-title {

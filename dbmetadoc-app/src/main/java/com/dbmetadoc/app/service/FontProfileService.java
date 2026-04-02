@@ -7,6 +7,7 @@ import com.dbmetadoc.app.service.document.FontPreset;
 import com.dbmetadoc.app.service.document.ResolvedFontProfile;
 import com.dbmetadoc.common.vo.FontPresetResponse;
 import com.dbmetadoc.generator.PdfFontResource;
+import com.dbmetadoc.generator.support.BundledFontSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,18 @@ public class FontProfileService {
     private static final String PDF_TITLE_FAMILY = "DBMetaDocPdfTitle";
     private static final String PDF_BODY_FAMILY = "DBMetaDocPdfBody";
     private static final String PDF_MONO_FAMILY = "DBMetaDocPdfMono";
+    private static final String PDF_SYMBOL_FAMILY = "DBMetaDocPdfSymbol";
+    private static final List<String> SYMBOL_FONT_CANDIDATES = List.of(
+            "PingFang SC",
+            "HarmonyOS Sans SC",
+            "MiSans",
+            "Noto Sans SC",
+            "Source Han Sans CN",
+            "Segoe UI Symbol",
+            "Segoe UI Emoji",
+            "Microsoft YaHei",
+            "微软雅黑"
+    );
 
     /**
      * 常见中英文字体名 → 文件名前缀映射。
@@ -43,9 +56,14 @@ public class FontProfileService {
      */
     private static final Map<String, String> FONT_NAME_ALIASES;
     private static final List<String> PDF_CHINESE_FALLBACKS = List.of(
+            "PingFang SC",
+            "HarmonyOS Sans SC",
+            "MiSans",
             "Source Han Sans CN",
             "Microsoft YaHei",
             "微软雅黑",
+            "Noto Sans SC",
+            "Noto Serif SC",
             "DengXian",
             "等线",
             "SimHei",
@@ -61,6 +79,18 @@ public class FontProfileService {
         m.put("dengxian", "deng");
         m.put("等线", "deng");
         m.put("consolas", "consola");
+        m.put("sfprotext", "sfprotext");
+        m.put("sfprodisplay", "sfprodisplay");
+        m.put("sfmono", "sfmono");
+        m.put("pingfangsc", "pingfang");
+        m.put("pingfang", "pingfang");
+        m.put("misans", "misans");
+        m.put("harmonyossans", "harmonyossans");
+        m.put("harmonyossanssc", "harmonyossanssc");
+        m.put("harmonysanssc", "harmonysanssc");
+        m.put("jetbrainsmono", "jetbrainsmono");
+        m.put("notosanssc", "notosanssc");
+        m.put("notoserifsc", "notoserifsc");
         m.put("simsun", "simsun");
         m.put("宋体", "simsun");
         m.put("simhei", "simhei");
@@ -99,26 +129,30 @@ public class FontProfileService {
         String titleFont = pickInstalledFontName(preset.getTitleCandidates(), fontFiles);
         String bodyFont = pickInstalledFontName(preset.getBodyCandidates(), fontFiles);
         String monoFont = pickInstalledFontName(preset.getMonoCandidates(), fontFiles);
+        String symbolFont = pickInstalledFontName(SYMBOL_FONT_CANDIDATES, fontFiles);
         List<String> pdfFonts = new ArrayList<>();
         collectPdfFonts(pdfFonts, fontFiles, titleFont);
         collectPdfFonts(pdfFonts, fontFiles, bodyFont);
         collectPdfFonts(pdfFonts, fontFiles, monoFont);
+        collectPdfFonts(pdfFonts, fontFiles, symbolFont);
         PDF_CHINESE_FALLBACKS.forEach(fontName -> collectPdfFonts(pdfFonts, fontFiles, fontName));
-        List<PdfFontResource> pdfFontResources = buildPdfFontResources(fontFiles, titleFont, bodyFont, monoFont);
+        List<PdfFontResource> pdfFontResources = buildPdfFontResources(fontFiles, titleFont, bodyFont, monoFont, symbolFont);
         Set<String> pdfFamilies = pdfFontResources.stream()
                 .map(PdfFontResource::getFamily)
                 .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
-        log.info("字体解析结果 [{}]：title={}，body={}，mono={}，PDF字体文件数={}，PDF嵌入别名={}",
-                preset.getCode(), titleFont, bodyFont, monoFont, pdfFonts.size(), pdfFamilies);
+        log.info("字体解析结果 [{}]：title={}，body={}，mono={}，symbol={}，PDF字体文件数={}，PDF嵌入别名={}",
+                preset.getCode(), titleFont, bodyFont, monoFont, symbolFont, pdfFonts.size(), pdfFamilies);
         return ResolvedFontProfile.builder()
                 .code(preset.getCode())
                 .label(preset.getLabel())
                 .titleFont(titleFont)
                 .bodyFont(bodyFont)
                 .monoFont(monoFont)
+                .symbolFont(symbolFont)
                 .titleFontCss(toCssFamily(preset.getTitleCandidates(), titleFont, "sans-serif"))
                 .bodyFontCss(toCssFamily(preset.getBodyCandidates(), bodyFont, "sans-serif"))
                 .monoFontCss(toCssFamily(preset.getMonoCandidates(), monoFont, "monospace"))
+                .symbolFontCss(toCssFamily(SYMBOL_FONT_CANDIDATES, symbolFont, "sans-serif"))
                 .pdfTitleFontCss(toPdfCssFamily(pdfFamilies,
                         List.of(PDF_TITLE_FAMILY, PDF_BODY_FAMILY),
                         List.of(titleFont, bodyFont),
@@ -131,14 +165,28 @@ public class FontProfileService {
                         List.of(PDF_MONO_FAMILY, PDF_BODY_FAMILY),
                         List.of(monoFont, bodyFont),
                         "monospace"))
+                .pdfSymbolFontCss(toPdfCssFamily(pdfFamilies,
+                        List.of(PDF_SYMBOL_FAMILY, PDF_BODY_FAMILY, PDF_TITLE_FAMILY),
+                        List.of(symbolFont, bodyFont, titleFont),
+                        "sans-serif"))
                 .pdfFontFiles(pdfFonts)
                 .pdfFontResources(pdfFontResources)
                 .build();
     }
 
     Map<String, Path> scanFontFiles() {
+        Map<String, Path> fontFiles = new LinkedHashMap<>();
+        BundledFontSupport.resolveBundledFontFiles().forEach(path ->
+                fontFiles.putIfAbsent(normalizeFontFileName(path.getFileName().toString()), path));
         Set<Path> directories = new LinkedHashSet<>();
         directories.add(Paths.get("C:\\Windows\\Fonts"));
+        String localAppData = System.getenv("LOCALAPPDATA");
+        if (StrUtil.isNotBlank(localAppData)) {
+            directories.add(Paths.get(localAppData, "Microsoft", "Windows", "Fonts"));
+        }
+        directories.add(Paths.get(System.getProperty("user.home"), "Library", "Fonts"));
+        directories.add(Paths.get("/Library/Fonts"));
+        directories.add(Paths.get("/System/Library/Fonts"));
         directories.add(Paths.get(System.getProperty("user.home"), ".fonts"));
         directories.add(Paths.get("/usr/share/fonts"));
         if (CollUtil.isNotEmpty(fontProfileProperties.getAdditionalDirectories())) {
@@ -147,7 +195,6 @@ public class FontProfileService {
                     .map(Paths::get)
                     .forEach(directories::add);
         }
-        Map<String, Path> fontFiles = new LinkedHashMap<>();
         for (Path directory : directories) {
             if (!Files.isDirectory(directory)) {
                 continue;
@@ -163,7 +210,7 @@ public class FontProfileService {
                 log.debug("扫描字体目录失败，目录：{}，原因：{}", directory, e.getMessage());
             }
         }
-        log.debug("扫描到 {} 个字体文件", fontFiles.size());
+        log.debug("扫描到 {} 个字体文件（含打包字体）", fontFiles.size());
         return fontFiles;
     }
 
@@ -258,7 +305,8 @@ public class FontProfileService {
     private List<PdfFontResource> buildPdfFontResources(Map<String, Path> fontFiles,
                                                         String titleFont,
                                                         String bodyFont,
-                                                        String monoFont) {
+                                                        String monoFont,
+                                                        String symbolFont) {
         List<PdfFontResource> resources = new ArrayList<>();
         addPdfFontResource(resources, PDF_TITLE_FAMILY,
                 findFirstEmbeddable(fontFiles, titleFont, bodyFont));
@@ -266,6 +314,8 @@ public class FontProfileService {
                 findFirstEmbeddable(fontFiles, bodyFont, titleFont));
         addPdfFontResource(resources, PDF_MONO_FAMILY,
                 findFirstEmbeddable(fontFiles, monoFont, bodyFont, titleFont));
+        addPdfFontResource(resources, PDF_SYMBOL_FAMILY,
+                findFirstEmbeddable(fontFiles, symbolFont, bodyFont, titleFont));
         return resources;
     }
 

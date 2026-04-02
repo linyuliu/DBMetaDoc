@@ -49,7 +49,7 @@ export const documentFormats = [
   { label: 'Excel', value: 'EXCEL' }
 ] as const
 export const booleanDisplayOptions = [
-  { label: '√ / ×', value: BOOLEAN_DISPLAY_SYMBOL },
+  { label: '✔ / ✘', value: BOOLEAN_DISPLAY_SYMBOL },
   { label: '是 / 否', value: BOOLEAN_DISPLAY_TEXT }
 ] as const
 
@@ -127,6 +127,13 @@ function hasText(value?: string | null) {
   return Boolean(value && normalizeText(value))
 }
 
+function normalizeValidationSegment(value?: string | number | null) {
+  if (value === undefined || value === null) {
+    return ''
+  }
+  return typeof value === 'string' ? normalizeText(value) || '' : String(value)
+}
+
 function hasExplicitSchemaParameter(parameters: Record<string, string>) {
   const schemaKeys = ['schema', 'currentschema', 'current_schema']
   return Object.keys(parameters).some(key => schemaKeys.includes(key.toLowerCase()))
@@ -187,6 +194,31 @@ export function buildConnectionPayloadFromForm(
   }
 }
 
+export function buildConnectionValidationKey(
+  form: Pick<WizardFormModel,
+  'datasourceId' | 'dbType' | 'jdbcUrl' | 'host' | 'port' | 'database' | 'schema' | 'username' | 'password'>,
+  sourceMode: SourceMode,
+  canUseStoredPassword: boolean,
+  useStoredPassword: boolean
+) {
+  const passwordSegment = canUseStoredPassword && useStoredPassword
+    ? '__stored_password__'
+    : normalizeValidationSegment(form.password)
+  return [
+    sourceMode,
+    normalizeValidationSegment(form.datasourceId),
+    normalizeValidationSegment(form.dbType),
+    normalizeValidationSegment(form.jdbcUrl),
+    normalizeValidationSegment(form.host),
+    normalizeValidationSegment(form.port),
+    normalizeValidationSegment(form.database),
+    normalizeValidationSegment(form.schema),
+    normalizeValidationSegment(form.username),
+    canUseStoredPassword && useStoredPassword ? 'stored' : 'typed',
+    passwordSegment
+  ].join('||')
+}
+
 export function buildDocumentPayloadFromForm(
   form: WizardFormModel,
   sourceMode: SourceMode,
@@ -203,6 +235,21 @@ export function buildDocumentPayloadFromForm(
   }
 }
 
+interface ContinueToContentActions {
+  validateSourceForm: () => Promise<void>
+  hasValidatedConnection: boolean
+  testConnection: () => Promise<void>
+  loadCatalog: () => Promise<unknown>
+}
+
+export async function continueToContentFlow(actions: ContinueToContentActions) {
+  await actions.validateSourceForm()
+  if (!actions.hasValidatedConnection) {
+    await actions.testConnection()
+  }
+  await actions.loadCatalog()
+}
+
 export function useExportWizardPage() {
   const route = useRoute()
   const router = useRouter()
@@ -217,6 +264,7 @@ export function useExportWizardPage() {
   const sourceMode = ref<SourceMode>(SOURCE_MODE_TEMPLATE)
   const previewHtml = ref('')
   const jdbcFeedback = ref<JdbcFeedback | null>(null)
+  const validatedConnectionKey = ref('')
   const drivers = ref<DriverInfo[]>([])
   const datasourceList = ref<DatasourceDetail[]>([])
   const documentOptions = ref<DocumentOptionsResponse | null>(null)
@@ -278,6 +326,14 @@ export function useExportWizardPage() {
   const showSchemaField = computed(() => Boolean(activeDriver.value?.supportsSchema) || hasText(form.schema))
   const showTableSchemaColumn = computed(() => availableTables.value.some(item => hasText(item.schema)))
   const showTableCommentColumn = computed(() => availableTables.value.some(item => hasText(item.comment)))
+  const currentConnectionValidationKey = computed(() => buildConnectionValidationKey(
+    form,
+    sourceMode.value,
+    canUseStoredPassword.value,
+    form.useStoredPassword
+  ))
+  const hasValidatedConnection = computed(() => Boolean(validatedConnectionKey.value)
+    && validatedConnectionKey.value === currentConnectionValidationKey.value)
 
   onMounted(() => {
     void initialize()
@@ -305,6 +361,12 @@ export function useExportWizardPage() {
   watch(canUseStoredPassword, value => {
     if (!value) {
       form.useStoredPassword = false
+    }
+  })
+
+  watch(currentConnectionValidationKey, value => {
+    if (validatedConnectionKey.value && validatedConnectionKey.value !== value) {
+      validatedConnectionKey.value = ''
     }
   })
 
@@ -408,6 +470,10 @@ export function useExportWizardPage() {
     form.selectedTableKeys = []
   }
 
+  function markConnectionValidated() {
+    validatedConnectionKey.value = currentConnectionValidationKey.value
+  }
+
   function resolveDefaultPort(dbType: string) {
     return drivers.value.find(item => item.type === dbType)?.defaultPort || DEFAULT_PORT
   }
@@ -473,6 +539,7 @@ export function useExportWizardPage() {
     testing.value = true
     try {
       await testDatasource(buildConnectionPayload())
+      markConnectionValidated()
       if (showMessage) {
         ElMessage.success('连接测试通过')
       }
@@ -481,8 +548,7 @@ export function useExportWizardPage() {
     }
   }
 
-  async function loadCatalog(showMessage = false) {
-    await validateSourceForm()
+  async function doLoadCatalog(showMessage = false) {
     catalogLoading.value = true
     try {
       const result = await fetchDocumentCatalog(buildConnectionPayload())
@@ -490,6 +556,7 @@ export function useExportWizardPage() {
       syncSelectedTables(result)
       previewHtml.value = ''
       previewEverLoaded.value = false
+      markConnectionValidated()
       if (showMessage) {
         ElMessage.success(`已加载 ${result.tableCount} 张表到表清单`)
       }
@@ -499,6 +566,11 @@ export function useExportWizardPage() {
     }
   }
 
+  async function loadCatalog(showMessage = false) {
+    await validateSourceForm()
+    return doLoadCatalog(showMessage)
+  }
+
   function syncSelectedTables(result: DocumentCatalogResponse) {
     const availableKeys = new Set(result.tables.map(item => item.key))
     const currentSelected = form.selectedTableKeys.filter(key => availableKeys.has(key))
@@ -506,8 +578,12 @@ export function useExportWizardPage() {
   }
 
   async function handleContinueToContent() {
-    await handleTestConnection(false)
-    await loadCatalog()
+    await continueToContentFlow({
+      validateSourceForm,
+      hasValidatedConnection: hasValidatedConnection.value,
+      testConnection: () => handleTestConnection(false),
+      loadCatalog: () => doLoadCatalog()
+    })
     activeStep.value = 1
     ElMessage.success('表清单已准备完成，请选择导出范围')
   }
@@ -537,6 +613,7 @@ export function useExportWizardPage() {
       form.rememberPassword = Boolean(result.passwordSaved)
       form.useStoredPassword = Boolean(result.passwordSaved)
       form.password = ''
+      markConnectionValidated()
       await router.replace({ path: '/export', query: { datasourceId: String(result.id) } })
       ElMessage.success('模板已保存，保存前连接测试已在服务端完成')
     } finally {
@@ -652,6 +729,7 @@ export function useExportWizardPage() {
     previewHtml,
     jdbcFeedback,
     canUseStoredPassword,
+    hasValidatedConnection,
     selectedTableCount,
     showSchemaField,
     showTableSchemaColumn,

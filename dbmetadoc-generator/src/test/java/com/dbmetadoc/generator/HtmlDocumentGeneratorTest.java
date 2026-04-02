@@ -50,6 +50,8 @@ class HtmlDocumentGeneratorTest {
         assertTrue(previewHtml.contains("\"Preview Body\", sans-serif"));
         assertTrue(previewHtml.contains("chapter-number"));
         assertTrue(previewHtml.contains(">可空<"));
+        assertTrue(previewHtml.contains("head-short"));
+        assertTrue(previewHtml.contains("head-nowrap"));
         assertFalse(previewHtml.contains("@font-face"));
         assertFalse(previewHtml.contains(fakeFontUri));
 

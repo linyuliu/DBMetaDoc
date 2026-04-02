@@ -37,8 +37,6 @@ ${view.subtitle}
 <#if table.hasBasicColumns>
 ### 字段清单
 
-主字段表固定保留 6 列核心字段，适合中文 A4 文档阅读和打印。
-
 | 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |
 | --- | --- | --- | --- | --- | --- |
 <#list table.columns![] as column>
@@ -48,8 +46,6 @@ ${view.subtitle}
 </#if>
 <#if table.hasExtendedColumns>
 ### 字段扩展补充
-
-扩展信息下沉为补充区，不再额外扩宽主字段表。
 
 | 序号 | 字段名 | 原始类型 | Java 类型 | 扩展说明 |
 | --- | --- | --- | --- | --- |

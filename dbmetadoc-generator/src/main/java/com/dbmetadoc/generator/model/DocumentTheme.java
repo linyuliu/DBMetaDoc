@@ -23,6 +23,7 @@ public class DocumentTheme {
     private String titleFontCss;
     private String bodyFontCss;
     private String monoFontCss;
+    private String symbolFontCss;
     private String fontFaceCss;
     private String primaryColor;
     private String primaryDarkColor;

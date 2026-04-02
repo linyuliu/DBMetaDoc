@@ -25,12 +25,15 @@ public class FontRenderProfile {
     private String titleFont;
     private String bodyFont;
     private String monoFont;
+    private String symbolFont;
     private String titleFontCss;
     private String bodyFontCss;
     private String monoFontCss;
+    private String symbolFontCss;
     private String pdfTitleFontCss;
     private String pdfBodyFontCss;
     private String pdfMonoFontCss;
+    private String pdfSymbolFontCss;
     private List<String> pdfFontFiles;
     private List<PdfFontResource> pdfFontResources;
 

@@ -22,8 +22,8 @@ public final class GeneratorSupport {
     public static final String BOOLEAN_STYLE_TEXT = "TEXT";
     private static final String YES = "是";
     private static final String NO = "否";
-    private static final String TRUE_SYMBOL = "√";
-    private static final String FALSE_SYMBOL = "×";
+    private static final String TRUE_SYMBOL = "\u2714";
+    private static final String FALSE_SYMBOL = "\u2718";
     private static final String EMPTY = "";
 
     private GeneratorSupport() {

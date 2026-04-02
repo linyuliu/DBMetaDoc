@@ -21,12 +21,15 @@ public class ResolvedFontProfile {
     String titleFont;
     String bodyFont;
     String monoFont;
+    String symbolFont;
     String titleFontCss;
     String bodyFontCss;
     String monoFontCss;
+    String symbolFontCss;
     String pdfTitleFontCss;
     String pdfBodyFontCss;
     String pdfMonoFontCss;
+    String pdfSymbolFontCss;
     List<String> pdfFontFiles;
     List<PdfFontResource> pdfFontResources;
 }

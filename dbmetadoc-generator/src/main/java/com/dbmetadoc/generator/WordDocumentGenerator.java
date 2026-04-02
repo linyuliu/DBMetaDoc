@@ -72,7 +72,7 @@ public class WordDocumentGenerator implements DocumentGenerator {
     private static final String COLOR_TITLE = "1F2F45";
     private static final String COLOR_SUBTITLE = "607287";
     private static final String COLOR_BORDER = "D7DDEA";
-    private static final String COLOR_HEADER = "EEF3F9";
+    private static final String COLOR_HEADER = "F4F7FB";
     private static final String COLOR_STRIPE = "FAFBFD";
     private static final String COLOR_TEXT = "000000";
     private static final String EMPTY_TABLE_MESSAGE = "当前未查询到可导出的表结构。";
@@ -169,19 +169,19 @@ public class WordDocumentGenerator implements DocumentGenerator {
 
     private void rewriteChapterTitle(XWPFParagraph paragraph, DocumentTableModel table, FontPalette fonts) {
         clearParagraph(paragraph);
-        paragraph.setAlignment(ParagraphAlignment.CENTER);
+        paragraph.setAlignment(ParagraphAlignment.LEFT);
         paragraph.setVerticalAlignment(TextAlignment.CENTER);
-        paragraph.setSpacingBefore(160);
-        paragraph.setSpacingAfter(120);
+        paragraph.setSpacingBefore(120);
+        paragraph.setSpacingAfter(90);
 
         XWPFRun numberRun = paragraph.createRun();
-        configureRun(numberRun, Convert.toStr(table.getTableNo()), fonts.title, 16, true, COLOR_TITLE);
+        configureRun(numberRun, Convert.toStr(table.getTableNo()), fonts.body, 10, true, COLOR_SUBTITLE);
 
         XWPFRun dotRun = paragraph.createRun();
-        configureRun(dotRun, ". ", fonts.title, 15, true, COLOR_TITLE);
+        configureRun(dotRun, ". ", fonts.body, 10, true, COLOR_SUBTITLE);
 
         XWPFRun titleRun = paragraph.createRun();
-        configureRun(titleRun, fullTableName(table), fonts.title, 15, true, COLOR_TITLE);
+        configureRun(titleRun, fullTableName(table), fonts.title, 13, true, COLOR_TITLE);
     }
 
     private void stripLegacyHelperParagraphs(XWPFDocument document) {
@@ -252,20 +252,22 @@ public class WordDocumentGenerator implements DocumentGenerator {
     /**
      * Word 字体方案。
      */
-    private record FontPalette(String title, String body, String mono) {
+    private record FontPalette(String title, String body, String mono, String symbol) {
 
-        private static final String DEFAULT_TITLE = "Microsoft YaHei";
-        private static final String DEFAULT_BODY = "DengXian";
-        private static final String DEFAULT_MONO = "Cascadia Mono";
+        private static final String DEFAULT_TITLE = "Source Han Sans CN";
+        private static final String DEFAULT_BODY = "Source Han Sans CN";
+        private static final String DEFAULT_MONO = "JetBrains Mono";
+        private static final String DEFAULT_SYMBOL = "Noto Sans SC";
 
         private static FontPalette from(FontRenderProfile fontProfile) {
             if (fontProfile == null) {
-                return new FontPalette(DEFAULT_TITLE, DEFAULT_BODY, DEFAULT_MONO);
+                return new FontPalette(DEFAULT_TITLE, DEFAULT_BODY, DEFAULT_MONO, DEFAULT_SYMBOL);
             }
             return new FontPalette(
                     StrUtil.blankToDefault(fontProfile.getTitleFont(), DEFAULT_TITLE),
                     StrUtil.blankToDefault(fontProfile.getBodyFont(), DEFAULT_BODY),
-                    StrUtil.blankToDefault(fontProfile.getMonoFont(), DEFAULT_MONO)
+                    StrUtil.blankToDefault(fontProfile.getMonoFont(), DEFAULT_MONO),
+                    StrUtil.blankToDefault(fontProfile.getSymbolFont(), DEFAULT_SYMBOL)
             );
         }
     }
@@ -498,9 +500,9 @@ public class WordDocumentGenerator implements DocumentGenerator {
                             (column, rowIndex) -> GeneratorSupport.safeText(column.getName())),
                     new WordColumn<>("数据类型", ParagraphAlignment.LEFT, FontPalette::mono,
                             (column, rowIndex) -> GeneratorSupport.safeText(column.getType())),
-                    new WordColumn<>("主键", ParagraphAlignment.CENTER, FontPalette::body,
+                    new WordColumn<>("主键", ParagraphAlignment.CENTER, FontPalette::symbol,
                             (column, rowIndex) -> GeneratorSupport.safeText(column.getPrimaryKeyText())),
-                    new WordColumn<>("可空", ParagraphAlignment.CENTER, FontPalette::body,
+                    new WordColumn<>("可空", ParagraphAlignment.CENTER, FontPalette::symbol,
                             (column, rowIndex) -> GeneratorSupport.safeText(column.getNullableText())),
                     new WordColumn<>("默认值", ParagraphAlignment.LEFT, FontPalette::body,
                             (column, rowIndex) -> GeneratorSupport.safeText(column.getDefaultValue())),
@@ -584,7 +586,7 @@ public class WordDocumentGenerator implements DocumentGenerator {
                             (index, rowIndex) -> GeneratorSupport.safeText(index.getName())),
                     new WordColumn<>("包含字段", ParagraphAlignment.LEFT, FontPalette::body,
                             (index, rowIndex) -> GeneratorSupport.safeText(index.getColumnNamesText())),
-                    new WordColumn<>("唯一", ParagraphAlignment.CENTER, FontPalette::body,
+                    new WordColumn<>("唯一", ParagraphAlignment.CENTER, FontPalette::symbol,
                             (index, rowIndex) -> GeneratorSupport.safeText(index.getUniqueText())),
                     new WordColumn<>("类型", ParagraphAlignment.LEFT, FontPalette::mono,
                             (index, rowIndex) -> GeneratorSupport.safeText(index.getType()))

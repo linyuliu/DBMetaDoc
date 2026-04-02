@@ -10,15 +10,24 @@ import java.util.List;
  */
 public enum FontPreset {
 
-    MODERN_CN("modern-cn", "现代中文", List.of("Source Han Sans CN", "Microsoft YaHei", "微软雅黑"),
-            List.of("DengXian", "等线", "Microsoft YaHei", "微软雅黑"),
-            List.of("Cascadia Mono", "JetBrains Mono", "LXGW WenKai Mono Screen", "Consolas")),
-    CLASSIC_CN("classic-cn", "经典中文", List.of("SimHei", "黑体", "Microsoft YaHei", "微软雅黑"),
-            List.of("SimSun", "宋体", "Microsoft YaHei", "微软雅黑"),
-            List.of("Cascadia Mono", "SimSun", "宋体", "Consolas")),
-    OFFICE_CN("office-cn", "办公中文", List.of("Microsoft YaHei", "微软雅黑", "Source Han Sans CN"),
-            List.of("DengXian", "等线", "Microsoft YaHei", "微软雅黑"),
-            List.of("JetBrains Mono", "Cascadia Mono", "Consolas"));
+    MODERN_CN("modern-cn", "现代中文",
+            List.of("SF Pro Display", "PingFang SC", "HarmonyOS Sans SC", "MiSans",
+                    "Source Han Sans CN", "Noto Sans SC", "Microsoft YaHei", "微软雅黑"),
+            List.of("SF Pro Text", "PingFang SC", "HarmonyOS Sans SC", "MiSans",
+                    "Source Han Sans CN", "Noto Sans SC", "DengXian", "等线", "Microsoft YaHei", "微软雅黑"),
+            List.of("JetBrains Mono", "SF Mono", "Cascadia Mono", "LXGW WenKai Mono Screen", "Consolas")),
+    CLASSIC_CN("classic-cn", "经典中文",
+            List.of("PingFang SC", "HarmonyOS Sans SC", "MiSans",
+                    "Source Han Sans CN", "SimHei", "黑体", "Microsoft YaHei", "微软雅黑"),
+            List.of("Noto Serif SC", "PingFang SC", "HarmonyOS Sans SC", "MiSans",
+                    "Noto Sans SC", "Source Han Sans CN", "SimSun", "宋体", "Microsoft YaHei", "微软雅黑"),
+            List.of("JetBrains Mono", "SF Mono", "Cascadia Mono", "SimSun", "宋体", "Consolas")),
+    OFFICE_CN("office-cn", "办公中文",
+            List.of("HarmonyOS Sans SC", "MiSans", "PingFang SC", "SF Pro Display",
+                    "Source Han Sans CN", "Noto Sans SC", "Microsoft YaHei", "微软雅黑"),
+            List.of("HarmonyOS Sans SC", "MiSans", "PingFang SC", "SF Pro Text",
+                    "Source Han Sans CN", "Noto Sans SC", "DengXian", "等线", "Microsoft YaHei", "微软雅黑"),
+            List.of("JetBrains Mono", "SF Mono", "Cascadia Mono", "Consolas"));
 
     private final String code;
     private final String label;
