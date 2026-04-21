@@ -145,37 +145,10 @@ body {
 }
 
 .table-section-title {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 1.4mm;
-}
-
-.chapter-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 7mm;
-  min-height: 6.2mm;
-  padding: 0 1.8mm;
-  border: 0.25mm solid ${theme.borderColor};
-  border-radius: 2mm;
-  background: #ffffff;
-  color: ${theme.labelColor};
-  font-family: ${theme.bodyFontCss};
-  font-size: 0.8em;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.chapter-dot,
-.chapter-title-text {
-  color: ${theme.primaryDarkColor};
-  font-weight: 700;
-}
-
-.chapter-title-text {
-  letter-spacing: 0.01em;
+  display: block;
+  letter-spacing: 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .table-comment-line {
@@ -229,10 +202,6 @@ th {
   overflow-wrap: normal;
 }
 
-.head-short {
-  letter-spacing: 0.02em;
-}
-
 .stripe tbody tr:nth-child(even) td {
   background: ${theme.stripeColor};
 }
@@ -259,15 +228,22 @@ th {
   font-weight: 700;
 }
 
+.narrow-head,
+.narrow-cell {
+  padding-left: 1.4mm;
+  padding-right: 1.4mm;
+}
+
 .order-cell {
   color: ${theme.primaryDarkColor};
-  letter-spacing: 0.03em;
+  font-family: ${theme.bodyFontCss};
+  letter-spacing: 0;
 }
 
 .bool-cell {
   font-family: ${theme.symbolFontCss};
   font-size: 0.94em;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
 }
 
 .row-lines-1 td {

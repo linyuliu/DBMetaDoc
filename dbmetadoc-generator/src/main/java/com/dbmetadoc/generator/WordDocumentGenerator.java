@@ -174,14 +174,8 @@ public class WordDocumentGenerator implements DocumentGenerator {
         paragraph.setSpacingBefore(120);
         paragraph.setSpacingAfter(90);
 
-        XWPFRun numberRun = paragraph.createRun();
-        configureRun(numberRun, Convert.toStr(table.getTableNo()), fonts.body, 10, true, COLOR_SUBTITLE);
-
-        XWPFRun dotRun = paragraph.createRun();
-        configureRun(dotRun, ". ", fonts.body, 10, true, COLOR_SUBTITLE);
-
         XWPFRun titleRun = paragraph.createRun();
-        configureRun(titleRun, fullTableName(table), fonts.title, 13, true, COLOR_TITLE);
+        configureRun(titleRun, table.getChapterTitle(), fonts.title, 13, true, COLOR_TITLE);
     }
 
     private void stripLegacyHelperParagraphs(XWPFDocument document) {
@@ -240,13 +234,6 @@ public class WordDocumentGenerator implements DocumentGenerator {
         fonts.setHAnsi(fontFamily);
         fonts.setEastAsia(fontFamily);
         fonts.setCs(fontFamily);
-    }
-
-    private String fullTableName(DocumentTableModel table) {
-        if (StrUtil.isBlank(table.getSchema())) {
-            return GeneratorSupport.safeText(table.getName());
-        }
-        return table.getSchema() + "." + GeneratorSupport.safeText(table.getName());
     }
 
     /**

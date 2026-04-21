@@ -40,14 +40,16 @@ class DocumentTableLayoutCalculatorTest {
         DocumentTableLayout layout = DocumentTableLayoutCalculator.buildBasicColumnLayout(rows);
 
         assertEquals(7, layout.getColumns().size());
-        assertBudgetBetween(layout.getColumns().get(0), 4, 5);
+        assertBudgetBetween(layout.getColumns().get(0), 5, 6);
         assertBudgetBetween(layout.getColumns().get(1), 10, 18);
         assertBudgetBetween(layout.getColumns().get(2), 9, 15);
-        assertBudgetBetween(layout.getColumns().get(3), 5, 6);
-        assertBudgetBetween(layout.getColumns().get(4), 5, 6);
+        assertBudgetBetween(layout.getColumns().get(3), 6, 7);
+        assertBudgetBetween(layout.getColumns().get(4), 6, 7);
         assertBudgetBetween(layout.getColumns().get(5), 10, 16);
         assertBudgetBetween(layout.getColumns().get(6), 14, 34);
         assertTrue(layout.getColumns().get(6).getCharacterBudget() > layout.getColumns().get(4).getCharacterBudget());
+        assertTrue(layout.getColumns().get(3).getWidthRatio() > layout.getColumns().get(0).getWidthRatio());
+        assertTrue(layout.getColumns().get(4).getWidthRatio() > layout.getColumns().get(0).getWidthRatio());
 
         double totalRatio = layout.getColumns().stream()
                 .mapToDouble(DocumentTableColumnLayout::getWidthRatio)
@@ -92,7 +94,7 @@ class DocumentTableLayoutCalculatorTest {
         assertTrue(indexLayout.getRowLineCounts().get(1) >= 2);
         assertEquals(1, foreignKeyLayout.getRowLineCounts().get(0));
         assertTrue(foreignKeyLayout.getRowLineCounts().get(1) >= 2);
-        assertBudgetBetween(indexLayout.getColumns().get(2), 5, 6);
+        assertBudgetBetween(indexLayout.getColumns().get(2), 6, 7);
     }
 
     private void assertBudgetBetween(DocumentTableColumnLayout column, double min, double max) {

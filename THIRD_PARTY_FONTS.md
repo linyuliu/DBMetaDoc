@@ -28,7 +28,6 @@
 
 ## Local-Only Optional Fonts
 
-以下字体不会被提交到仓库，也不会被打进项目内置字体包，只作为本机可选优先字体：
 
 - Apple: `SF Pro Text` / `SF Pro Display` / `SF Mono` / `PingFang SC`
 - Xiaomi: `MiSans`
@@ -46,8 +45,3 @@
 - MiSans: <https://hyperos.mi.com/font/en/download/>
 - Huawei Design Resource: <https://developer.huawei.com/consumer/cn/design/resource-V1/>
 
-## Notice
-
-- 本项目不会把 Apple SF、PingFang、MiSans、HarmonyOS Sans 的字体文件随仓库再分发。
-- Web 前端只通过 `@font-face` 注册可再分发字体；品牌字体仅通过系统或本机目录参与回退。
-- 导出链路会优先尝试本机品牌字体，缺失时自动回退到内置的开源字体。

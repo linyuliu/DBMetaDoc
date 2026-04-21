@@ -31,7 +31,7 @@ ${view.subtitle}
 </#if>
 <#if view.hasTables>
 <#list view.tables![] as table>
-## ${table.tableNo!0}. ${table.schema!""}<#if table.schema?has_content>.</#if>${table.name!""}
+## ${table.chapterTitle!""}
 
 > ${table.comment!""}
 <#if table.hasBasicColumns>

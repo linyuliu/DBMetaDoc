@@ -42,12 +42,15 @@ class DocumentGeneratorSmokeTest {
         assertTrue(html.contains("字段清单"));
         assertTrue(html.contains("字段扩展补充"));
         assertTrue(html.contains("数据库结构文档"));
-        assertTrue(html.contains("chapter-number"));
+        assertTrue(html.contains("1. biz.order_main"));
         assertTrue(html.contains(">可空<"));
         assertTrue(html.contains("✔"));
         assertTrue(html.contains("✘"));
         assertTrue(html.contains("<colgroup>"));
+        assertTrue(html.contains("narrow-cell"));
         assertFalse(html.contains(">字段列表<"));
+        assertFalse(html.contains("chapter-number"));
+        assertFalse(html.contains("chapter-dot"));
         assertFalse(html.contains("预览目录"));
         assertFalse(html.contains("返回目录"));
         assertFalse(html.contains("表目录"));
@@ -56,6 +59,7 @@ class DocumentGeneratorSmokeTest {
         String markdown = new String(DocumentGeneratorFactory.create("MARKDOWN").generate(renderContext), StandardCharsets.UTF_8);
         assertTrue(markdown.contains("字段清单"));
         assertTrue(markdown.contains("字段扩展补充"));
+        assertTrue(markdown.contains("## 1. biz.order_main"));
         assertTrue(markdown.contains("| 字段名 | 类型 | 主键 | 可空 | 默认值 | 注释 |"));
         assertTrue(markdown.contains("✔"));
         assertTrue(markdown.contains("✘"));
@@ -83,7 +87,7 @@ class DocumentGeneratorSmokeTest {
             assertFalse(xml.contains("[field]"));
             assertFalse(xml.contains("字段列表"));
             assertFalse(xml.contains("数 据 表 目 录"));
-            assertTrue(hasChapterTitleRuns(document, "1. biz.order_main"));
+            assertTrue(hasPlainChapterTitle(document, "1. biz.order_main"));
             assertTrue(hasBoldCell(document, "id"));
         }
 
@@ -91,6 +95,7 @@ class DocumentGeneratorSmokeTest {
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excel))) {
             assertEquals("库概览", workbook.getSheetName(0));
             assertTrue(workbook.getSheetName(1).startsWith("01_"));
+            assertTrue(sheetContains(workbook, "1. biz.order_main"));
             assertTrue(sheetContains(workbook, "字段清单"));
             assertTrue(sheetContains(workbook, "字段扩展补充"));
             assertTrue(sheetContains(workbook, "✔"));
@@ -127,9 +132,9 @@ class DocumentGeneratorSmokeTest {
         return false;
     }
 
-    private boolean hasChapterTitleRuns(XWPFDocument document, String expectedText) {
+    private boolean hasPlainChapterTitle(XWPFDocument document, String expectedText) {
         for (XWPFParagraph paragraph : document.getParagraphs()) {
-            if (expectedText.equals(paragraph.getText()) && paragraph.getRuns().size() >= 3) {
+            if (expectedText.equals(paragraph.getText()) && paragraph.getRuns().size() == 1) {
                 return true;
             }
         }

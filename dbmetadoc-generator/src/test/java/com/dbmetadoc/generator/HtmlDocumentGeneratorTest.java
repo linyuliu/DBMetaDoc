@@ -48,10 +48,13 @@ class HtmlDocumentGeneratorTest {
         String pdfHtml = htmlDocumentGenerator.generateHtml(renderContext, DocumentRenderTarget.PDF_PRINT);
 
         assertTrue(previewHtml.contains("\"Preview Body\", sans-serif"));
-        assertTrue(previewHtml.contains("chapter-number"));
+        assertTrue(previewHtml.contains("1. dbmeta.md_datasource_profile"));
         assertTrue(previewHtml.contains(">可空<"));
         assertTrue(previewHtml.contains("head-short"));
         assertTrue(previewHtml.contains("head-nowrap"));
+        assertTrue(previewHtml.contains("narrow-cell"));
+        assertFalse(previewHtml.contains("chapter-number"));
+        assertFalse(previewHtml.contains("chapter-dot"));
         assertFalse(previewHtml.contains("@font-face"));
         assertFalse(previewHtml.contains(fakeFontUri));
 
@@ -59,6 +62,9 @@ class HtmlDocumentGeneratorTest {
         assertTrue(pdfHtml.contains(fakeFontUri));
         assertTrue(pdfHtml.contains("DBMetaDocPdfBody"));
         assertTrue(pdfHtml.contains("DBMetaDocPdfTitle"));
+        assertTrue(pdfHtml.contains("1. dbmeta.md_datasource_profile"));
+        assertFalse(pdfHtml.contains("chapter-number"));
+        assertFalse(pdfHtml.contains("chapter-dot"));
     }
 
     @Test
@@ -91,28 +97,29 @@ class HtmlDocumentGeneratorTest {
         try (PDDocument document = PDDocument.load(pdf)) {
             String text = new PDFTextStripper().getText(document);
             assertTrue(text.contains("数据库结构文档"));
-            assertTrue(text.contains("订单主表"));
-            assertTrue(text.contains("订单标题"));
+            assertTrue(text.contains("数据源配置表"));
+            assertTrue(text.contains("数据库名称"));
+            assertTrue(text.contains("dbmeta.md_datasource_profile"));
         }
     }
 
     private DocumentRenderContext buildRenderContext(FontRenderProfile fontProfile) {
         ColumnInfo column = ColumnInfo.builder()
-                .name("order_title")
+                .name("database_name")
                 .type("VARCHAR")
                 .rawType("varchar(128)")
                 .javaType("String")
                 .nullable(false)
                 .primaryKey(false)
                 .defaultValue("")
-                .comment("订单标题")
+                .comment("数据库名称")
                 .ordinalPosition(1)
                 .build();
 
         TableInfo table = TableInfo.builder()
-                .name("order_main")
-                .schema("biz")
-                .comment("订单主表")
+                .name("md_datasource_profile")
+                .schema("dbmeta")
+                .comment("数据源配置表")
                 .columns(List.of(column))
                 .indexes(List.of())
                 .foreignKeys(List.of())
@@ -122,7 +129,7 @@ class HtmlDocumentGeneratorTest {
                 .name("dbmeta")
                 .type("MYSQL")
                 .databaseName("dbmeta")
-                .schemaName("biz")
+                .schemaName("dbmeta")
                 .tables(List.of(table))
                 .build();
 

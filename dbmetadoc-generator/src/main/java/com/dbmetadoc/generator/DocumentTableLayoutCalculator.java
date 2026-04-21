@@ -34,11 +34,11 @@ public final class DocumentTableLayoutCalculator {
 
     public static DocumentTableLayout buildBasicColumnLayout(List<DocumentColumnModel> rows) {
         return calculate(List.of(
-                spec("orderNo", "序号", 4, 5, row -> String.valueOf(row.getOrderNo())),
+                spec("orderNo", "序号", 5, 6, row -> String.valueOf(row.getOrderNo())),
                 spec("name", "列名", 10, 18, DocumentColumnModel::getName),
                 spec("type", "数据类型", 9, 15, DocumentColumnModel::getType),
-                spec("primaryKeyText", "主键", 5, 6, DocumentColumnModel::getPrimaryKeyText),
-                spec("nullableText", "可空", 5, 6, DocumentColumnModel::getNullableText),
+                spec("primaryKeyText", "主键", 6, 7, DocumentColumnModel::getPrimaryKeyText),
+                spec("nullableText", "可空", 6, 7, DocumentColumnModel::getNullableText),
                 spec("defaultValue", "默认值", 10, 16, DocumentColumnModel::getDefaultValue),
                 spec("comment", "列说明", 14, 34, DocumentColumnModel::getComment)
         ), rows);
@@ -46,7 +46,7 @@ public final class DocumentTableLayoutCalculator {
 
     public static DocumentTableLayout buildExtendedColumnLayout(List<DocumentColumnModel> rows) {
         return calculate(List.of(
-                spec("orderNo", "序号", 4, 5, row -> String.valueOf(row.getOrderNo())),
+                spec("orderNo", "序号", 5, 6, row -> String.valueOf(row.getOrderNo())),
                 spec("name", "字段名", 10, 16, DocumentColumnModel::getName),
                 spec("rawType", "原始类型", 12, 18, DocumentColumnModel::getRawType),
                 spec("javaType", "Java 类型", 10, 14, DocumentColumnModel::getJavaType),
@@ -58,7 +58,7 @@ public final class DocumentTableLayoutCalculator {
         return calculate(List.of(
                 spec("name", "索引名", 12, 20, DocumentIndexModel::getName),
                 spec("columnNamesText", "包含字段", 18, 32, DocumentIndexModel::getColumnNamesText),
-                spec("uniqueText", "唯一", 5, 6, DocumentIndexModel::getUniqueText),
+                spec("uniqueText", "唯一", 6, 7, DocumentIndexModel::getUniqueText),
                 spec("type", "类型", 8, 12, DocumentIndexModel::getType)
         ), rows);
     }

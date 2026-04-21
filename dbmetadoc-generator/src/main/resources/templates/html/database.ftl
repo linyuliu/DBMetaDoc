@@ -60,11 +60,7 @@
         <#list view.tables![] as table>
         <section class="section chapter" id="table-${table.tableNo!0}">
           <div class="section-head chapter-head">
-            <h2 class="section-title table-section-title">
-              <span class="chapter-number">${table.tableNo!0}</span>
-              <span class="chapter-dot">.</span>
-              <span class="chapter-title-text">${table.schema!""}<#if table.schema?has_content>.</#if>${table.name!""}</span>
-            </h2>
+            <h2 class="section-title table-section-title">${table.chapterTitle!""}</h2>
           </div>
           <#if table.comment?has_content>
           <p class="table-comment-line">${table.comment!""}</p>
@@ -80,11 +76,11 @@
             </colgroup>
             <thead>
               <tr>
-                <th class="center head-short head-nowrap">序号</th>
+                <th class="center head-short head-nowrap narrow-head">序号</th>
                 <th>列名</th>
                 <th>数据类型</th>
-                <th class="center head-short head-nowrap">主键</th>
-                <th class="center head-short head-nowrap">可空</th>
+                <th class="center head-short head-nowrap narrow-head">主键</th>
+                <th class="center head-short head-nowrap narrow-head">可空</th>
                 <th>默认值</th>
                 <th>列说明</th>
               </tr>
@@ -92,11 +88,11 @@
             <tbody>
               <#list table.columns![] as column>
               <tr class="${table.basicColumnLayout.rowClasses[column?index]!''}">
-                <td class="center cell-strong order-cell nowrap-cell">${column.orderNo!0}</td>
+                <td class="center cell-strong order-cell nowrap-cell narrow-cell">${column.orderNo!0}</td>
                 <td class="cell-strong">${column.name!""}</td>
                 <td class="cell-strong">${column.type!""}</td>
-                <td class="center cell-strong bool-cell nowrap-cell">${column.primaryKeyText!""}</td>
-                <td class="center cell-strong bool-cell nowrap-cell">${column.nullableText!""}</td>
+                <td class="center cell-strong bool-cell nowrap-cell narrow-cell">${column.primaryKeyText!""}</td>
+                <td class="center cell-strong bool-cell nowrap-cell narrow-cell">${column.nullableText!""}</td>
                 <td>${column.defaultValue!""}</td>
                 <td>${column.comment!""}</td>
               </tr>
@@ -115,7 +111,7 @@
             </colgroup>
             <thead>
               <tr>
-                <th class="center head-short head-nowrap">序号</th>
+                <th class="center head-short head-nowrap narrow-head">序号</th>
                 <th>字段名</th>
                 <th>原始类型</th>
                 <th>Java 类型</th>
@@ -125,7 +121,7 @@
             <tbody>
               <#list table.extendedColumns![] as column>
               <tr class="${table.extendedColumnLayout.rowClasses[column?index]!''}">
-                <td class="center cell-strong order-cell nowrap-cell">${column.orderNo!0}</td>
+                <td class="center cell-strong order-cell nowrap-cell narrow-cell">${column.orderNo!0}</td>
                 <td class="cell-strong">${column.name!""}</td>
                 <td class="cell-strong">${column.rawType!""}</td>
                 <td class="cell-strong">${column.javaType!""}</td>
@@ -148,7 +144,7 @@
               <tr>
                 <th>索引名</th>
                 <th>包含字段</th>
-                <th class="center head-short head-nowrap">唯一</th>
+                <th class="center head-short head-nowrap narrow-head">唯一</th>
                 <th>类型</th>
               </tr>
             </thead>
@@ -157,7 +153,7 @@
               <tr class="${table.indexLayout.rowClasses[index?index]!''}">
                 <td class="cell-strong">${index.name!""}</td>
                 <td>${index.columnNamesText!""}</td>
-                <td class="center cell-strong bool-cell nowrap-cell">${index.uniqueText!""}</td>
+                <td class="center cell-strong bool-cell nowrap-cell narrow-cell">${index.uniqueText!""}</td>
                 <td class="cell-strong">${index.type!""}</td>
               </tr>
               </#list>
